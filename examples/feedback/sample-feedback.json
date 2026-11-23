@@ -1,0 +1,20 @@
+[
+  {
+    "id": "demo-ci-0001",
+    "source": "customer",
+    "title": "Pipeline fails with an opaque dependency resolution error",
+    "body": "Our CI job fails during install and the log only shows a resolver conflict. A category and the failing package would save us time.",
+    "labels": ["customer", "bug", "ci"],
+    "reactions": 4,
+    "created_at": "2026-11-01T09:00:00Z"
+  },
+  {
+    "id": "demo-openapi-0002",
+    "source": "github_issue",
+    "title": "Need a deterministic OpenAPI breaking-change report",
+    "body": "Upgrading a spec silently removed a response field. A local diff tool that lists breaking changes before release would help.",
+    "labels": ["feature", "openapi"],
+    "reactions": 2,
+    "created_at": "2026-11-02T15:30:00Z"
+  }
+]

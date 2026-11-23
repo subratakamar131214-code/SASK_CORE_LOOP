@@ -1,0 +1,244 @@
+# SASK_CORE_LOOP runtime configuration.
+# Secrets never live here. Values are read from environment variables / GitHub Actions
+# Secrets: GROQ_API_KEY, GEMINI_API_KEY, FINE_GRAINED_GH_TOKEN.
+schema_version: 1
+
+repo:
+  name: SASK_CORE_LOOP
+  owner: OWNER_PLACEHOLDER
+  visibility: public
+  default_branch: main
+
+billing:
+  currency: USD
+  hard_cap_usd: 0.00
+  paid_resources_enabled: false
+  paid_apis_enabled: false
+
+runtime:
+  offline_by_default: true
+  max_cycle_seconds: 180
+  state_commit_allowlist:
+    - state/
+    - swarm/children/
+
+feedback:
+  max_items_per_cycle: 40
+  max_state_items: 200
+  source_weights:
+    customer: 5.0
+    support: 4.0
+    github_issue: 2.5
+    inbox: 2.0
+  kind_multipliers:
+    bug: 1.3
+    complaint: 1.5
+    feature_request: 1.1
+    question: 0.8
+  priority_labels:
+    - customer
+    - paid
+    - sponsor
+    - critical
+    - p1
+
+niches:
+  - id: ci-failure-diagnoser
+    family: ci-diagnostics
+    title: CI/CD failure diagnostics
+    product_name: sask-ci-diagnoser
+    product_type: ci_failure_diagnoser
+    description: >-
+      Classify failed CI logs into actionable root-cause categories such as
+      dependency resolution, failing tests, permissions, timeouts, and OOM.
+    keywords:
+      - ci
+      - pipeline
+      - github actions
+      - build failure
+      - flaky test
+      - log
+      - oom
+    pain: 0.92
+    willingness_to_pay: 0.78
+    buildability: 0.96
+    competition: 0.45
+    compliance_risk: 0.05
+    active: true
+
+  - id: openapi-schema-migrator
+    family: api-schema
+    title: OpenAPI schema migration reports
+    product_name: sask-openapi-migrator
+    product_type: openapi_schema_migrator
+    description: >-
+      Compare two OpenAPI documents and produce a deterministic breaking-change
+      report with migration hints for API producers and consumers.
+    keywords:
+      - openapi
+      - swagger
+      - schema
+      - migration
+      - api
+      - breaking change
+      - json
+    pain: 0.85
+    willingness_to_pay: 0.72
+    buildability: 0.94
+    competition: 0.55
+    compliance_risk: 0.04
+    active: true
+
+scoring:
+  weights:
+    feedback: 0.35
+    pain: 0.20
+    willingness_to_pay: 0.15
+    buildability: 0.10
+    competition_inverse: 0.10
+    compliance_safety: 0.10
+
+inference:
+  max_calls_per_cycle: 6
+  cache_enabled: true
+  cache_ttl_hours: 24
+  backoff:
+    base_seconds: 1.0
+    max_seconds: 20.0
+    max_attempts: 4
+    jitter_fraction: 0.2
+    seed: 1337
+  providers:
+    - name: groq
+      enabled: true
+      kind: openai_compatible
+      base_url: https://api.groq.com/openai/v1
+      api_key_env: GROQ_API_KEY
+      models:
+        - llama-3.3-70b-versatile
+        - llama-3.1-8b-instant
+      max_requests_per_day: 80
+      max_tokens_per_request: 1024
+      timeout_seconds: 25
+    - name: gemini
+      enabled: true
+      kind: gemini
+      base_url: https://generativelanguage.googleapis.com/v1beta
+      api_key_env: GEMINI_API_KEY
+      models:
+        - gemini-2.0-flash
+        - gemini-1.5-flash
+      max_requests_per_day: 40
+      max_tokens_per_request: 2048
+      timeout_seconds: 30
+    - name: ollama
+      enabled: false
+      kind: ollama
+      base_url: http://127.0.0.1:11434
+      api_key_env: null
+      models:
+        - llama3.2
+      max_requests_per_day: 500
+      max_tokens_per_request: 1024
+      timeout_seconds: 60
+    - name: deterministic
+      enabled: true
+      kind: deterministic
+      base_url: local://deterministic
+      api_key_env: null
+      models:
+        - template-v1
+      max_requests_per_day: 100000
+      max_tokens_per_request: 4096
+      timeout_seconds: 1
+
+network:
+  offline_by_default: true
+  request_timeout_seconds: 30
+  max_requests_per_day: 200
+  user_agent: "SASK_CORE_LOOP/0.1.0 (+https://github.com/OWNER_PLACEHOLDER/SASK_CORE_LOOP)"
+
+monetization:
+  enabled: false
+  zero_upfront_only: true
+  channels:
+    - id: github_sponsors
+      label: GitHub Sponsors
+      url: https://github.com/sponsors/OWNER_PLACEHOLDER
+      status: placeholder
+      requires_human_setup: true
+    - id: lemon_squeezy
+      label: Lemon Squeezy
+      url: https://OWNER_PLACEHOLDER.lemonsqueezy.com
+      status: placeholder
+      requires_human_setup: true
+    - id: gumroad
+      label: Gumroad
+      url: https://OWNER_PLACEHOLDER.gumroad.com
+      status: placeholder
+      requires_human_setup: true
+    - id: polar
+      label: Polar.sh
+      url: https://polar.sh/OWNER_PLACEHOLDER
+      status: placeholder
+      requires_human_setup: true
+  payouts:
+    automated: false
+    payment_credentials_in_repo: false
+
+swarm:
+  enabled: false
+  default_mode: workspace
+  max_children: 3
+  min_spawn_interval_hours: 168
+  repo_prefix: sask-child-
+  require_human_approval: true
+  allow_repo_creation: false
+  telemetry_stale_hours: 72
+  workspace_dir: swarm/children
+
+evolution:
+  max_proposals_per_cycle: 2
+  require_human_review: true
+  auto_apply: false
+  protected_paths:
+    - config/invariants.yaml
+    - src/core/invariants.py
+    - src/core/redact.py
+    - src/sensors/sanitizer.py
+    - src/compliance/
+    - .github/workflows/
+  verification_commands:
+    - [python, -m, ruff, check, src, tests]
+    - [python, -m, mypy, src]
+    - [python, -m, pytest, -q]
+
+heartbeat:
+  stale_after_hours:
+    cycle: 26
+    heartbeat: 8
+    upgrade: 192
+    swarm: 720
+  required_workflows:
+    - file: revenue-cycle.yml
+      max_age_hours: 26
+    - file: heartbeat-immortality.yml
+      max_age_hours: 8
+  alert_label: sask-alert
+  max_alerts_per_day: 2
+
+compliance:
+  allowed_licenses:
+    - MIT
+    - Apache-2.0
+    - BSD-2-Clause
+    - BSD-3-Clause
+    - ISC
+    - MPL-2.0
+    - Unlicense
+    - CC0-1.0
+  max_github_issues_per_day: 3
+  respect_robots_txt: true
+  forbid_bulk_issue_creation: true
+  forbid_unsolicited_outreach: true
+  min_request_interval_seconds: 1.0

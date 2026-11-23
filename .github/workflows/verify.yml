@@ -1,0 +1,61 @@
+name: verify
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verify-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  PYTHONUNBUFFERED: "1"
+  PYTHONDONTWRITEBYTECODE: "1"
+  SASK_ALLOW_NETWORK: "0"
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+
+      - name: Verify invariant pin
+        run: python -m src.core.invariants --check
+
+      - name: Lint
+        run: python -m ruff check src tests
+
+      - name: Type-check
+        run: python -m mypy src
+
+      - name: Test
+        run: python -m pytest -q
+
+      - name: Secret scan
+        run: python -m src.compliance.secretscan --tree .
+
+      - name: Offline status smoke test
+        run: python -m src.orchestrator --status --dry-run > /dev/null

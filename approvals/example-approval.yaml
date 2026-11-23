@@ -1,0 +1,6 @@
+# Template only. Copy to approvals/<date>-<niche>.yaml and replace placeholders.
+# The swarm-replicate workflow rejects this exact filename.
+action: replication
+approved_by: your-human-github-handle
+reference: https://github.com/OWNER_PLACEHOLDER/SASK_CORE_LOOP/issues/0
+approved_at: 2026-12-01T00:00:00Z

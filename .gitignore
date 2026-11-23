@@ -1,0 +1,58 @@
+# === Secrets: never commit ===
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+secrets/
+.github/secrets/
+*.kdbx
+
+# === Python ===
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# === Build / distribution artifacts ===
+build/
+dist/
+*.whl
+*.tar.gz
+*.zip
+
+# === Raw feedback: may contain PII, never commit ===
+inbox/*
+!inbox/README.md
+state/inbox/
+
+# === Runtime caches and locks (state itself is sanitized and committed) ===
+state/cache/
+state/*.lock
+state/**/*.lock
+*.sqlite
+*.sqlite3
+*.db
+*.db-journal
+.state/
+
+# === Local toolchains / models ===
+.tools/
+.ollama/
+models/
+
+# === OS / editor ===
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

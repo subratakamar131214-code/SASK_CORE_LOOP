@@ -1,0 +1,70 @@
+# IMMUTABLE SAFETY INVARIANTS
+#
+# The SHA-256 digest of the parsed document is pinned in src/core/invariants.py.
+# Code refuses to run if the file no longer matches the pin. Changing an invariant
+# requires a human-reviewed commit that updates this file, the pin, and the tests.
+# Self-upgrade proposals and child replicas are forbidden from editing this file,
+# src/core/invariants.py, src/core/redact.py, the compliance package, or workflows.
+schema_version: 1
+
+billing:
+  currency: USD
+  hard_cap_usd: 0.00
+  allow_paid_resources: false
+  allow_paid_apis: false
+  allow_negative_costs: false
+  forbid_paid_cloud_billing: true
+
+approvals:
+  require_human_for_real_money_payouts: true
+  require_human_for_payment_credentials: true
+  require_human_for_replication: true
+  require_human_for_invariant_change: true
+  require_human_for_visibility_change: true
+  reject_bot_approvers: true
+
+data:
+  redact_secrets_before_write: true
+  sanitize_pii_before_public_write: true
+  sanitize_before_outbound_inference: true
+  allow_pii_to_cloud: false
+  forbid_private_customer_data_in_public_commits: true
+
+repository:
+  visibility: public
+  forbid_secrets_in_git: true
+  protected_paths:
+    - config/invariants.yaml
+    - src/core/invariants.py
+    - src/core/redact.py
+    - src/sensors/sanitizer.py
+    - src/compliance/
+    - .github/workflows/
+
+network:
+  allowed_hosts:
+    - api.groq.com
+    - generativelanguage.googleapis.com
+    - api.github.com
+    - github.com
+    - 127.0.0.1
+    - localhost
+  require_https_except_localhost: true
+  max_requests_per_day: 250
+  forbid_paid_ai_hosts: true
+
+swarm:
+  replication_allowed: true
+  max_children: 3
+  one_niche_per_child: true
+  require_human_approval: true
+  allow_child_invariant_override: false
+  allow_repo_creation_by_default: false
+  child_must_pin_parent_invariants: true
+
+compliance:
+  forbid_bulk_issue_creation: true
+  max_github_issues_per_day: 3
+  require_license_allowlist: true
+  respect_robots_txt: true
+  forbid_unsolicited_outreach: true

@@ -1,0 +1,104 @@
+name: swarm-replicate
+
+# Manual-only child replication. Requires:
+#   1. swarm.enabled: true in config/system.yaml (human-reviewed change),
+#   2. a committed human approval file under approvals/,
+#   3. an environment named swarm-approval with required reviewers configured.
+# Repository creation additionally requires the explicit apply input.
+on:
+  workflow_dispatch:
+    inputs:
+      niche:
+        description: "Niche id to lock (single niche per child); blank = top-ranked"
+        required: false
+        default: ""
+        type: string
+      mode:
+        description: "workspace scaffolds locally; repo creates a public child repo"
+        required: true
+        default: workspace
+        type: choice
+        options:
+          - workspace
+          - repo
+      approval_file:
+        description: "Committed approval file, e.g. approvals/2026-12-01-ci-child.yaml"
+        required: true
+        type: string
+      apply:
+        description: "Required for repo mode: perform the external GitHub action"
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sask-state
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  PYTHONUNBUFFERED: "1"
+  PYTHONDONTWRITEBYTECODE: "1"
+
+jobs:
+  replicate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: swarm-approval
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e .
+
+      - name: Validate approval file
+        env:
+          APPROVAL_FILE: ${{ inputs.approval_file }}
+        run: |
+          case "$APPROVAL_FILE" in
+            approvals/*.yml|approvals/*.yaml) ;;
+            *) echo "approval file must be committed under approvals/"; exit 1 ;;
+          esac
+          case "$APPROVAL_FILE" in
+            approvals/example-approval.yaml) echo "example approval cannot be used"; exit 1 ;;
+          esac
+          test -f "$APPROVAL_FILE"
+
+      - name: Spawn approved child
+        env:
+          APPROVAL_FILE: ${{ inputs.approval_file }}
+          MODE: ${{ inputs.mode }}
+          NICHE: ${{ inputs.niche }}
+          APPLY: ${{ inputs.apply }}
+          FINE_GRAINED_GH_TOKEN: ${{ secrets.FINE_GRAINED_GH_TOKEN }}
+        run: |
+          args=(--replicate --mode "$MODE" --approval-file "$APPROVAL_FILE")
+          if [ -n "$NICHE" ]; then args+=(--niche "$NICHE"); fi
+          if [ "$APPLY" = "true" ]; then args+=(--apply); fi
+          python -m src.orchestrator "${args[@]}"
+
+      - name: Secret-scan state and child workspaces
+        run: |
+          python -m src.compliance.secretscan --tree state
+          if [ -d swarm/children ]; then
+            python -m src.compliance.secretscan --tree swarm/children
+          fi
+
+      - name: Commit sanitized state
+        run: bash scripts/commit_state.sh "replicate"
