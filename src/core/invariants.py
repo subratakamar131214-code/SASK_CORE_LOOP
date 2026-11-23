@@ -31,7 +31,7 @@ from src.core.yamlutil import (
     require_str_tuple,
 )
 
-PINNED_INVARIANTS_SHA256 = "e97b669d79391eb7251ea4e4cd8ce9eea2a728fd0b6e25c30b249e9a5091820b"
+PINNED_INVARIANTS_SHA256 = "408ff94e97806e13d8faecac8ac4f1f25d126c15b16f8347ad5079ba5ebd8705"
 
 _HEX_DIGEST = re.compile(r"^[0-9a-f]{64}$")
 _PAID_AI_HOSTS = frozenset(
@@ -113,6 +113,23 @@ class Invariants:
     require_license_allowlist: bool
     respect_robots_txt: bool
     forbid_unsolicited_outreach: bool
+    owner_vault: str
+    system_treasury: str
+    owner_vault_untouchable: bool
+    human_only_tasks: tuple[str, ...]
+    system_may_prepare_handoffs: bool
+    interview_insights_highest_priority: bool
+    bootstrap_spend_usd: float
+    outreach_auto_send_enabled: bool
+    allowed_channel_kinds: tuple[str, ...]
+    automated_payouts_allowed: bool
+    capital_research_only: bool
+    live_trading_enabled: bool
+    live_investing_enabled: bool
+    require_research_compliance_verification: bool
+    require_broker_verification: bool
+    max_live_loss_usd: float
+    owner_vault_excluded_from_research: bool
     digest: str
 
     @classmethod
@@ -135,6 +152,10 @@ class Invariants:
         network = require_mapping(document, "network", "invariants")
         swarm = require_mapping(document, "swarm", "invariants")
         compliance = require_mapping(document, "compliance", "invariants")
+        ownership = require_mapping(document, "ownership", "invariants")
+        outreach = require_mapping(document, "outreach", "invariants")
+        monetization = require_mapping(document, "monetization", "invariants")
+        capital_research = require_mapping(document, "capital_research", "invariants")
 
         allowed_hosts = frozenset(
             host.lower() for host in require_str_tuple(network, "allowed_hosts", "network")
@@ -204,6 +225,53 @@ class Invariants:
             forbid_unsolicited_outreach=require_bool(
                 compliance, "forbid_unsolicited_outreach", "compliance"
             ),
+            owner_vault=require_str(ownership, "owner_vault", "ownership"),
+            system_treasury=require_str(ownership, "system_treasury", "ownership"),
+            owner_vault_untouchable=require_bool(
+                ownership, "owner_vault_untouchable", "ownership"
+            ),
+            human_only_tasks=require_str_tuple(ownership, "human_only_tasks", "ownership"),
+            system_may_prepare_handoffs=require_bool(
+                ownership, "system_may_prepare_handoffs", "ownership"
+            ),
+            interview_insights_highest_priority=require_bool(
+                ownership, "interview_insights_highest_priority", "ownership"
+            ),
+            bootstrap_spend_usd=require_float(
+                ownership, "bootstrap_spend_usd", "ownership"
+            ),
+            outreach_auto_send_enabled=require_bool(
+                outreach, "auto_send_enabled", "outreach"
+            ),
+            allowed_channel_kinds=require_str_tuple(
+                monetization, "allowed_channel_kinds", "monetization"
+            ),
+            automated_payouts_allowed=require_bool(
+                monetization, "automated_payouts_allowed", "monetization"
+            ),
+            capital_research_only=require_bool(
+                capital_research, "research_only", "capital_research"
+            ),
+            live_trading_enabled=require_bool(
+                capital_research, "live_trading_enabled", "capital_research"
+            ),
+            live_investing_enabled=require_bool(
+                capital_research, "live_investing_enabled", "capital_research"
+            ),
+            require_research_compliance_verification=require_bool(
+                capital_research,
+                "require_human_compliance_verification",
+                "capital_research",
+            ),
+            require_broker_verification=require_bool(
+                capital_research, "require_broker_verification", "capital_research"
+            ),
+            max_live_loss_usd=require_float(
+                capital_research, "max_live_loss_usd", "capital_research"
+            ),
+            owner_vault_excluded_from_research=require_bool(
+                capital_research, "owner_vault_excluded", "capital_research"
+            ),
             digest=digest,
         )
         invariants._enforce_intrinsic_safety()
@@ -261,6 +329,68 @@ class Invariants:
             (self.require_license_allowlist, "license allowlist must remain enforced"),
             (self.respect_robots_txt, "robots.txt must remain respected"),
             (self.forbid_unsolicited_outreach, "unsolicited outreach must remain forbidden"),
+            (self.owner_vault != self.system_treasury, "OWNER_VAULT and treasury must differ"),
+            (self.owner_vault_untouchable, "OWNER_VAULT must remain untouchable"),
+            (self.bootstrap_spend_usd == 0.0, "bootstrap spend must remain 0.00"),
+            (
+                self.system_may_prepare_handoffs,
+                "the system must prepare human handoff packets",
+            ),
+            (
+                self.interview_insights_highest_priority,
+                "human interview insights must remain top priority",
+            ),
+            (
+                not self.outreach_auto_send_enabled,
+                "outreach must require explicit human review and manual sending",
+            ),
+            (
+                set(self.allowed_channel_kinds)
+                == {
+                    "marketplace",
+                    "bounty",
+                    "paid_template",
+                    "custom_audit",
+                    "recurring_saas",
+                },
+                "all five monetization channel kinds must remain allowed",
+            ),
+            (
+                not self.automated_payouts_allowed,
+                "automated payouts must remain forbidden",
+            ),
+            (self.capital_research_only, "capital research must remain research-only"),
+            (
+                not self.live_trading_enabled,
+                "live trading must remain disabled without a human-reviewed invariant change",
+            ),
+            (
+                not self.live_investing_enabled,
+                "live investing must remain disabled without a human-reviewed invariant change",
+            ),
+            (
+                self.require_research_compliance_verification
+                and self.require_broker_verification,
+                "research activation must require human compliance and broker verification",
+            ),
+            (self.max_live_loss_usd == 0.0, "live research loss cap must remain 0.00"),
+            (
+                self.owner_vault_excluded_from_research,
+                "OWNER_VAULT must remain excluded from research capital",
+            ),
+            (
+                {
+                    "payment_and_billing_setup",
+                    "legal_entity_and_contracts",
+                    "tax_registration_and_filings",
+                    "design_partner_calls",
+                    "word_of_mouth",
+                    "broker_and_exchange_compliance",
+                    "live_trading_activation",
+                }.issubset(set(self.human_only_tasks)),
+                "human-only ownership must cover payment, legal, tax, discovery, "
+                "trust, and trading activation",
+            ),
         )
         for ok, message in checks:
             if not ok:

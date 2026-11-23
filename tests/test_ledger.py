@@ -226,3 +226,73 @@ def test_effort_shares_handle_zero_scores() -> None:
     )
     assert decision.effort_shares == {"a": 0.5, "b": 0.5}
     assert sum(decision.effort_shares.values()) == pytest.approx(1.0)
+
+
+def test_capital_entries_enforce_settled_revenue_and_owner_vault(
+    runtime_paths, guard
+) -> None:
+    ledger = _ledger(runtime_paths, guard)
+    ledger.record_capital(
+        {
+            "spent_usd": 1.0,
+            "settled_revenue_usd": 2.0,
+            "source_account": "SYSTEM_TREASURY",
+            "owner_vault_touched": False,
+        }
+    )
+    with pytest.raises(InvariantViolation, match="exceed"):
+        ledger.record_capital(
+            {
+                "spent_usd": 3.0,
+                "settled_revenue_usd": 2.0,
+                "source_account": "SYSTEM_TREASURY",
+                "owner_vault_touched": False,
+            }
+        )
+    with pytest.raises(InvariantViolation, match="OWNER_VAULT"):
+        ledger.record_capital(
+            {
+                "spent_usd": 1.0,
+                "settled_revenue_usd": 2.0,
+                "source_account": "SYSTEM_TREASURY",
+                "owner_vault_touched": True,
+            }
+        )
+    with pytest.raises(InvariantViolation, match="OWNER_VAULT"):
+        ledger.record_capital(
+            {
+                "spent_usd": 1.0,
+                "settled_revenue_usd": 2.0,
+                "source_account": "OWNER_VAULT",
+                "owner_vault_touched": False,
+            }
+        )
+    with pytest.raises(StateError, match="numeric"):
+        ledger.record_capital(
+            {
+                "spent_usd": "free",
+                "settled_revenue_usd": 2.0,
+                "owner_vault_touched": False,
+            }
+        )
+
+
+def test_prune_entries_never_touch_owner_vault(runtime_paths, guard) -> None:
+    ledger = _ledger(runtime_paths, guard)
+    ledger.record_pruning(
+        {"decisions": [{"asset_id": "openapi-schema-migrator", "action": "pause"}]}
+    )
+    with pytest.raises(InvariantViolation, match="OWNER_VAULT"):
+        ledger.record_pruning(
+            {"decisions": [{"asset_id": "OWNER_VAULT", "action": "sunset"}]}
+        )
+    with pytest.raises(StateError, match="decisions list"):
+        ledger.record_pruning({"paused": []})
+
+
+def test_handoff_entries_require_packets(runtime_paths, guard) -> None:
+    ledger = _ledger(runtime_paths, guard)
+    ledger.record_handoff({"packets": ["reliability_proof"], "count": 1})
+    with pytest.raises(StateError, match="packets"):
+        ledger.record_handoff({"packets": []})
+    ledger.validate_chain()

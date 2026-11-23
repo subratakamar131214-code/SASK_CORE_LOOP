@@ -7,6 +7,11 @@ on:
   schedule:
     - cron: "0 */12 * * *"
   workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Temporary runtime only: no state or artifact writes, offline inference"
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -51,7 +56,12 @@ jobs:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           SASK_ALLOW_NETWORK: ${{ (secrets.GROQ_API_KEY != '' || secrets.GEMINI_API_KEY != '') && '1' || '0' }}
-        run: python -m src.orchestrator --cycle
+        run: |
+          if [[ "${{ inputs.dry_run }}" == "true" ]]; then
+            python -m src.orchestrator --cycle --dry-run --offline
+          else
+            python -m src.orchestrator --cycle
+          fi
 
       - name: Upload free artifacts
         if: always()
@@ -63,9 +73,11 @@ jobs:
           retention-days: 14
 
       - name: Secret-scan state
+        if: ${{ github.event_name != 'workflow_dispatch' || inputs.dry_run != true }}
         run: python -m src.compliance.secretscan --tree state
 
       - name: Commit sanitized state
+        if: ${{ github.event_name != 'workflow_dispatch' || inputs.dry_run != true }}
         run: bash scripts/commit_state.sh "cycle"
 
       - name: Upload cycle report

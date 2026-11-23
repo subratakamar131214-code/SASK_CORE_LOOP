@@ -19,6 +19,10 @@ _COMPONENT_NAMES = (
     "buildability",
     "competition_inverse",
     "compliance_safety",
+    "urgency",
+    "failure_cost",
+    "recurrence",
+    "recurring_willingness_to_pay",
 )
 
 
@@ -63,6 +67,10 @@ class NicheScorer:
             weights.buildability,
             weights.competition_inverse,
             weights.compliance_safety,
+            weights.urgency,
+            weights.failure_cost,
+            weights.recurrence,
+            weights.recurring_willingness_to_pay,
         )
         if weights.feedback < highest:
             raise ConfigError("feedback must carry the highest scoring weight")
@@ -80,14 +88,13 @@ class NicheScorer:
             "buildability": niche.buildability,
             "competition_inverse": 1.0 - niche.competition,
             "compliance_safety": 1.0 - niche.compliance_risk,
+            "urgency": niche.urgency,
+            "failure_cost": niche.failure_cost,
+            "recurrence": niche.recurrence,
+            "recurring_willingness_to_pay": niche.recurring_willingness_to_pay,
         }
-        total = (
-            self._weights.feedback * components["feedback"]
-            + self._weights.pain * components["pain"]
-            + self._weights.willingness_to_pay * components["willingness_to_pay"]
-            + self._weights.buildability * components["buildability"]
-            + self._weights.competition_inverse * components["competition_inverse"]
-            + self._weights.compliance_safety * components["compliance_safety"]
+        total = sum(
+            getattr(self._weights, name) * components[name] for name in _COMPONENT_NAMES
         )
         ordered_evidence = tuple(
             item.id for item in sorted(matched, key=lambda item: (-item.priority, item.id))

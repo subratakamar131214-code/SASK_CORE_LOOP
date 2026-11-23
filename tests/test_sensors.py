@@ -167,6 +167,50 @@ def test_niche_scoring_ranks_seed_niches(config) -> None:
     assert abs(sum(score.total for score in ranked)) > 0.0
 
 
+def test_high_pain_recurring_components_drive_the_score(config) -> None:
+    scorer = NicheScorer(config.scoring)
+    ci, openapi = (
+        scorer.score(niche) for niche in config.active_niches()
+    )
+    assert ci.total > openapi.total
+    for name in ("urgency", "failure_cost", "recurrence", "recurring_willingness_to_pay"):
+        assert ci.components[name] > openapi.components[name]
+        assert 0.0 <= ci.components[name] <= 1.0
+    expected = sum(
+        getattr(config.scoring, name) * ci.components[name]
+        for name in (
+            "feedback",
+            "pain",
+            "willingness_to_pay",
+            "buildability",
+            "competition_inverse",
+            "compliance_safety",
+            "urgency",
+            "failure_cost",
+            "recurrence",
+            "recurring_willingness_to_pay",
+        )
+    )
+    assert ci.total == pytest.approx(expected)
+
+
+def test_every_niche_articulates_b2b_pain(config) -> None:
+    for niche in config.niches:
+        assert len(niche.workflow_bottleneck) >= 12
+        assert len(niche.budget_owner) >= 12
+        assert len(niche.reliability_rationale) >= 12
+
+
+def test_opportunity_signals_carry_b2b_context(config) -> None:
+    scanner = OpportunityScanner(config.active_niches(), clock=lambda: FIXED_NOW)
+    signals = scanner.scan([NicheScore(niche_id="ci-failure-diagnoser", total=0.9)])
+    payload = signals[0].to_json()
+    assert payload["workflow_bottleneck"]
+    assert payload["budget_owner"]
+    assert payload["reliability_rationale"]
+    assert "budget owner" in payload["rationale"].lower()
+
+
 def test_feedback_pressure_changes_the_ranking(config) -> None:
     scorer = NicheScorer(config.scoring)
     feedback = (

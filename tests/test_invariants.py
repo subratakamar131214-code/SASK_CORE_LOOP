@@ -58,6 +58,19 @@ def test_invariants_encode_the_safety_contract(guard: InvariantGuard) -> None:
     assert rules.visibility == "public"
     assert rules.swarm_require_approval is True
     assert rules.one_niche_per_child is True
+    assert rules.owner_vault == "OWNER_VAULT"
+    assert rules.system_treasury == "SYSTEM_TREASURY"
+    assert rules.owner_vault_untouchable is True
+    assert rules.bootstrap_spend_usd == 0.0
+    assert rules.system_may_prepare_handoffs is True
+    assert rules.interview_insights_highest_priority is True
+    assert {
+        "payment_and_billing_setup",
+        "legal_entity_and_contracts",
+        "tax_registration_and_filings",
+        "design_partner_calls",
+        "word_of_mouth",
+    } <= set(rules.human_only_tasks)
 
 
 def test_modified_file_without_pin_update_is_rejected(repo_root: Path, tmp_path: Path) -> None:

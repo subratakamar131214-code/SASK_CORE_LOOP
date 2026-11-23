@@ -47,12 +47,41 @@ jobs:
       - name: Analyze and propose
         run: python -m src.orchestrator --evolve --verify-commands
 
+      # Ruthless pruning uses real pull signals only; OWNER_VAULT and safety
+      # artifacts are never candidates.
+      - name: Prune dead niches and replicas
+        run: python -m src.orchestrator --prune
+
+      # Prepare human-owned handoff material. Humans still execute payment,
+      # legal, partnership, and design-partner work.
+      - name: Prepare handoff briefs
+        run: python -m src.orchestrator --handoff-brief
+
+      # Human-reviewed discovery questions only. Automated outreach is disabled
+      # by invariant; this artifact is for a person to review and send manually.
+      - name: Prepare discovery briefs
+        run: python -m src.orchestrator --discovery-briefs
+
+      # Rank monetization channels and paper-only research strategies. Nothing
+      # executes live: orders, payouts, and OWNER_VAULT access stay disabled.
+      - name: Prepare channel outcome plan
+        run: python -m src.orchestrator --max-outcome-plan
+
       - name: Upload proposals
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: sask-proposals-${{ github.run_id }}
           path: state/proposals/**
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Upload handoff briefs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sask-handoff-${{ github.run_id }}
+          path: state/handoff/**
           if-no-files-found: warn
           retention-days: 30
 

@@ -120,6 +120,9 @@ class ProductBuilder:
             features=features,
             pro_features=pro_features,
             feedback_titles=feedback_titles,
+            workflow_bottleneck=niche.workflow_bottleneck,
+            budget_owner=niche.budget_owner,
+            reliability_rationale=niche.reliability_rationale,
         )
         rendered = render_template_files(spec)
         rendered.update(generate_tests(spec))

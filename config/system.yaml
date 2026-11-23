@@ -51,6 +51,13 @@ niches:
     description: >-
       Classify failed CI logs into actionable root-cause categories such as
       dependency resolution, failing tests, permissions, timeouts, and OOM.
+    workflow_bottleneck: >-
+      Release engineering loses hours every week triaging red pipelines by hand,
+      which blocks deploys and hides the real failing dependency.
+    budget_owner: Platform or release engineering manager
+    reliability_rationale: >-
+      Each recurring outage burns paid on-call time and risks missed delivery
+      commitments, so teams pay for consistent diagnosis on every failure.
     keywords:
       - ci
       - pipeline
@@ -60,6 +67,10 @@ niches:
       - log
       - oom
     pain: 0.92
+    urgency: 0.96
+    failure_cost: 0.95
+    recurrence: 0.90
+    recurring_willingness_to_pay: 0.82
     willingness_to_pay: 0.78
     buildability: 0.96
     competition: 0.45
@@ -74,6 +85,13 @@ niches:
     description: >-
       Compare two OpenAPI documents and produce a deterministic breaking-change
       report with migration hints for API producers and consumers.
+    workflow_bottleneck: >-
+      API teams break downstream consumers during schema releases and cannot
+      prove compatibility before shipping.
+    budget_owner: API platform or integration engineering lead
+    reliability_rationale: >-
+      A missed breaking change causes recurring integration incidents and
+      customer escalations, so compatibility checks must run on every release.
     keywords:
       - openapi
       - swagger
@@ -83,6 +101,10 @@ niches:
       - breaking change
       - json
     pain: 0.85
+    urgency: 0.80
+    failure_cost: 0.85
+    recurrence: 0.72
+    recurring_willingness_to_pay: 0.70
     willingness_to_pay: 0.72
     buildability: 0.94
     competition: 0.55
@@ -91,12 +113,16 @@ niches:
 
 scoring:
   weights:
-    feedback: 0.35
-    pain: 0.20
-    willingness_to_pay: 0.15
-    buildability: 0.10
-    competition_inverse: 0.10
-    compliance_safety: 0.10
+    feedback: 0.26
+    pain: 0.10
+    willingness_to_pay: 0.08
+    buildability: 0.08
+    competition_inverse: 0.08
+    compliance_safety: 0.08
+    urgency: 0.10
+    failure_cost: 0.10
+    recurrence: 0.07
+    recurring_willingness_to_pay: 0.05
 
 inference:
   max_calls_per_cycle: 6
@@ -186,6 +212,95 @@ monetization:
     automated: false
     payment_credentials_in_repo: false
 
+# Structured earning paths used by the channel sensors and handoff builder.
+# Every channel is zero-upfront: no paid infrastructure and no stored credentials.
+monetization_channels:
+  - id: github_marketplace
+    kind: marketplace
+    label: GitHub Marketplace / IDE extensions
+    url: https://github.com/marketplace
+    status: placeholder
+    requires_human_setup: true
+    recurring: false
+    platform_billing: true
+    time_to_first_dollar_days: 21
+    build_cost: 0.35
+    maintenance_cost: 0.30
+    platform_fit: 0.85
+    compliance_fit: 0.95
+    modeled_value_units: 4.0
+    conversion_probability: 0.35
+    build_cost_units: 0.30
+    maintenance_units_per_cycle: 0.05
+  - id: issue_bounties
+    kind: bounty
+    label: Issue-backed bounties and grants
+    url: https://github.com/OWNER_PLACEHOLDER/SASK_CORE_LOOP/issues
+    status: placeholder
+    requires_human_setup: true
+    recurring: false
+    platform_billing: true
+    time_to_first_dollar_days: 30
+    build_cost: 0.30
+    maintenance_cost: 0.10
+    platform_fit: 0.75
+    compliance_fit: 0.90
+    modeled_value_units: 3.0
+    conversion_probability: 0.30
+    build_cost_units: 0.25
+    maintenance_units_per_cycle: 0.02
+  - id: starter_templates
+    kind: paid_template
+    label: Paid starter kits and schemas
+    url: https://OWNER_PLACEHOLDER.gumroad.com
+    status: placeholder
+    requires_human_setup: true
+    recurring: false
+    platform_billing: true
+    time_to_first_dollar_days: 7
+    build_cost: 0.20
+    maintenance_cost: 0.15
+    platform_fit: 0.80
+    compliance_fit: 0.95
+    modeled_value_units: 2.5
+    conversion_probability: 0.45
+    build_cost_units: 0.20
+    maintenance_units_per_cycle: 0.03
+  - id: reliability_audits
+    kind: custom_audit
+    label: Done-for-you reliability and schema audits
+    url: https://github.com/OWNER_PLACEHOLDER/SASK_CORE_LOOP#audit
+    status: placeholder
+    requires_human_setup: true
+    recurring: false
+    platform_billing: false
+    time_to_first_dollar_days: 14
+    build_cost: 0.45
+    maintenance_cost: 0.05
+    platform_fit: 0.70
+    compliance_fit: 0.85
+    modeled_value_units: 6.0
+    conversion_probability: 0.20
+    build_cost_units: 0.35
+    maintenance_units_per_cycle: 0.01
+  - id: hosted_pro
+    kind: recurring_saas
+    label: Hosted/pro workflow (compounding MRR)
+    url: https://OWNER_PLACEHOLDER.example.com
+    status: placeholder
+    requires_human_setup: true
+    recurring: true
+    platform_billing: true
+    time_to_first_dollar_days: 45
+    build_cost: 0.60
+    maintenance_cost: 0.55
+    platform_fit: 0.80
+    compliance_fit: 0.90
+    modeled_value_units: 8.0
+    conversion_probability: 0.25
+    build_cost_units: 0.50
+    maintenance_units_per_cycle: 0.10
+
 swarm:
   enabled: false
   default_mode: workspace
@@ -206,12 +321,110 @@ evolution:
     - src/core/invariants.py
     - src/core/redact.py
     - src/sensors/sanitizer.py
+    - src/sensors/pain_interviews.py
+    - src/sensors/channel_sensors.py
+    - src/sensors/outcome_simulator.py
     - src/compliance/
+    - src/capital/
+    - src/handoff/
     - .github/workflows/
   verification_commands:
     - [python, -m, ruff, check, src, tests]
     - [python, -m, mypy, src]
     - [python, -m, pytest, -q]
+
+pruning:
+  enabled: true
+  min_age_days: 30
+  min_feedback_items: 3
+  min_repeat_usage: 2
+  min_adoption: 0.01
+  pause_after_stale_days: 45
+  sunset_after_stale_days: 90
+  sunset_after_zero_cycles: 6
+  archive_dir: state/archive
+
+capital:
+  system_treasury: SYSTEM_TREASURY
+  owner_vault: OWNER_VAULT
+  reinvestment_fraction: 0.50
+  min_roi_threshold: 1.50
+  clone_roi_threshold: 3.00
+  max_clone_share: 0.00
+  bootstrap_spend_usd: 0.00
+  categories:
+    - reliability
+    - distribution
+    - oci_graduation
+
+# Research-only capital evaluation. Live trading and live investing stay off until
+# a human owner verifies broker/exchange compliance and updates the invariants.
+capital_and_trading_research:
+  research_only: true
+  live_trading_enabled: false
+  live_investing_enabled: false
+  require_human_compliance_verification: true
+  require_broker_verification: true
+  max_system_treasury_loss_fraction: 0.00
+  forbid_owner_vault: true
+  paper_capital_units: 40.0
+  strategies:
+    - id: index_backtest_baseline
+      kind: backtest
+      expected_return_fraction: 0.06
+      max_drawdown_fraction: 0.10
+      fee_fraction: 0.001
+      live: false
+      uses_owner_vault: false
+    - id: paper_momentum
+      kind: paper_simulation
+      expected_return_fraction: 0.09
+      max_drawdown_fraction: 0.18
+      fee_fraction: 0.002
+      live: false
+      uses_owner_vault: false
+    - id: treasury_allocation_model
+      kind: capital_allocation_model
+      expected_return_fraction: 0.05
+      max_drawdown_fraction: 0.05
+      fee_fraction: 0.0
+      live: false
+      uses_owner_vault: false
+
+handoff:
+  output_dir: state/handoff
+  required_packets:
+    - reliability_proof
+    - benchmark_proof
+    - design_partner_outreach
+    - interview_script
+    - partnership_pitch
+    - payment_legal_checklist
+  human_owned_tasks:
+    - payment_and_billing_setup
+    - legal_entity_and_contracts
+    - tax_registration_and_filings
+    - bank_and_payout_accounts
+    - design_partner_calls
+    - customer_interviews
+    - trust_building
+    - partner_outreach_and_negotiation
+    - word_of_mouth
+    - broker_and_exchange_compliance
+    - live_trading_activation
+  system_owned_tasks:
+    - reliability_evidence
+    - benchmark_reports
+    - sanitized_code_and_releases
+    - outreach_scripts
+    - interview_questionnaires
+    - pitch_briefs
+    - readiness_checklists
+
+outreach:
+  # Outreach is prepared for human review only. The loop never sends messages,
+  # creates bulk campaigns, or contacts anyone automatically.
+  auto_send_enabled: false
 
 heartbeat:
   stale_after_hours:

@@ -26,6 +26,14 @@ from src.core.yamlutil import (
 _PROVIDER_KINDS = {"openai_compatible", "gemini", "ollama", "deterministic"}
 _SWARM_MODES = {"workspace", "repo"}
 _CHANNEL_STATUSES = {"placeholder", "active", "disabled"}
+_MONETIZATION_CHANNEL_KINDS = {
+    "marketplace",
+    "bounty",
+    "paid_template",
+    "custom_audit",
+    "recurring_saas",
+}
+_RESEARCH_STRATEGY_KINDS = {"backtest", "paper_simulation", "capital_allocation_model"}
 
 
 @dataclass(frozen=True)
@@ -68,8 +76,15 @@ class NicheConfig:
     product_name: str
     product_type: str
     description: str
+    workflow_bottleneck: str
+    budget_owner: str
+    reliability_rationale: str
     keywords: tuple[str, ...]
     pain: float
+    urgency: float
+    failure_cost: float
+    recurrence: float
+    recurring_willingness_to_pay: float
     willingness_to_pay: float
     buildability: float
     competition: float
@@ -85,6 +100,10 @@ class ScoringWeights:
     buildability: float
     competition_inverse: float
     compliance_safety: float
+    urgency: float = 0.0
+    failure_cost: float = 0.0
+    recurrence: float = 0.0
+    recurring_willingness_to_pay: float = 0.0
 
     def total(self) -> float:
         return (
@@ -94,6 +113,10 @@ class ScoringWeights:
             + self.buildability
             + self.competition_inverse
             + self.compliance_safety
+            + self.urgency
+            + self.failure_cost
+            + self.recurrence
+            + self.recurring_willingness_to_pay
         )
 
 
@@ -164,6 +187,51 @@ class MonetizationConfig:
 
 
 @dataclass(frozen=True)
+class MonetizationChannelDef:
+    id: str
+    kind: str
+    label: str
+    url: str
+    status: str
+    requires_human_setup: bool
+    recurring: bool
+    platform_billing: bool
+    time_to_first_dollar_days: float
+    build_cost: float
+    maintenance_cost: float
+    platform_fit: float
+    compliance_fit: float
+    modeled_value_units: float
+    conversion_probability: float
+    build_cost_units: float
+    maintenance_units_per_cycle: float
+
+
+@dataclass(frozen=True)
+class ResearchStrategyConfig:
+    id: str
+    kind: str
+    expected_return_fraction: float
+    max_drawdown_fraction: float
+    fee_fraction: float
+    live: bool = False
+    uses_owner_vault: bool = False
+
+
+@dataclass(frozen=True)
+class CapitalResearchConfig:
+    research_only: bool
+    live_trading_enabled: bool
+    live_investing_enabled: bool
+    require_human_compliance_verification: bool
+    require_broker_verification: bool
+    max_system_treasury_loss_fraction: float
+    forbid_owner_vault: bool
+    paper_capital_units: float
+    strategies: tuple[ResearchStrategyConfig, ...]
+
+
+@dataclass(frozen=True)
 class SwarmConfig:
     enabled: bool
     default_mode: str
@@ -183,6 +251,44 @@ class EvolutionConfig:
     auto_apply: bool
     protected_paths: tuple[str, ...]
     verification_commands: tuple[tuple[str, ...], ...]
+
+
+@dataclass(frozen=True)
+class PruningConfig:
+    enabled: bool
+    min_age_days: float
+    min_feedback_items: int
+    min_repeat_usage: int
+    min_adoption: float
+    pause_after_stale_days: float
+    sunset_after_stale_days: float
+    sunset_after_zero_cycles: int
+    archive_dir: str
+
+
+@dataclass(frozen=True)
+class CapitalConfig:
+    system_treasury: str
+    owner_vault: str
+    reinvestment_fraction: float
+    min_roi_threshold: float
+    clone_roi_threshold: float
+    max_clone_share: float
+    bootstrap_spend_usd: float
+    categories: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class HandoffConfig:
+    output_dir: str
+    required_packets: tuple[str, ...]
+    human_owned_tasks: tuple[str, ...]
+    system_owned_tasks: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class OutreachConfig:
+    auto_send_enabled: bool
 
 
 @dataclass(frozen=True)
@@ -221,8 +327,14 @@ class SystemConfig:
     inference: InferenceConfig
     network: NetworkConfig
     monetization: MonetizationConfig
+    monetization_channels: tuple[MonetizationChannelDef, ...]
     swarm: SwarmConfig
     evolution: EvolutionConfig
+    pruning: PruningConfig
+    capital: CapitalConfig
+    capital_research: CapitalResearchConfig
+    handoff: HandoffConfig
+    outreach: OutreachConfig
     heartbeat: HeartbeatConfig
     compliance: ComplianceConfig
 
@@ -238,8 +350,23 @@ class SystemConfig:
         network = require_mapping(document, "network", "config")
         monetization = require_mapping(document, "monetization", "config")
         payouts = require_mapping(monetization, "payouts", "monetization")
+        channel_defs = tuple(
+            _parse_channel_def(item, index)
+            for index, item in enumerate(
+                require_sequence(document, "monetization_channels", "config")
+            )
+        )
+        if not channel_defs:
+            raise ConfigError("config.monetization_channels cannot be empty")
+        research_doc = require_mapping(
+            document, "capital_and_trading_research", "config"
+        )
         swarm = require_mapping(document, "swarm", "config")
         evolution = require_mapping(document, "evolution", "config")
+        pruning = require_mapping(document, "pruning", "config")
+        capital = require_mapping(document, "capital", "config")
+        handoff = require_mapping(document, "handoff", "config")
+        outreach = require_mapping(document, "outreach", "config")
         heartbeat = require_mapping(document, "heartbeat", "config")
         compliance = require_mapping(document, "compliance", "config")
 
@@ -263,6 +390,12 @@ class SystemConfig:
                 weights_doc, "competition_inverse", "scoring.weights"
             ),
             compliance_safety=require_float(weights_doc, "compliance_safety", "scoring.weights"),
+            urgency=require_float(weights_doc, "urgency", "scoring.weights"),
+            failure_cost=require_float(weights_doc, "failure_cost", "scoring.weights"),
+            recurrence=require_float(weights_doc, "recurrence", "scoring.weights"),
+            recurring_willingness_to_pay=require_float(
+                weights_doc, "recurring_willingness_to_pay", "scoring.weights"
+            ),
         )
         if abs(weights.total() - 1.0) > 1e-6:
             raise ConfigError("scoring.weights must sum to 1.0")
@@ -281,6 +414,18 @@ class SystemConfig:
         channels = tuple(
             _parse_channel(as_mapping(item, f"monetization.channels[{index}]"))
             for index, item in enumerate(require_sequence(monetization, "channels", "monetization"))
+        )
+        research_strategies = tuple(
+            _parse_research_strategy(
+                as_mapping(
+                    item, f"capital_and_trading_research.strategies[{index}]"
+                )
+            )
+            for index, item in enumerate(
+                require_sequence(
+                    research_doc, "strategies", "capital_and_trading_research"
+                )
+            )
         )
 
         source_weights = mapping_numbers(
@@ -357,6 +502,7 @@ class SystemConfig:
                     payouts, "payment_credentials_in_repo", "monetization.payouts"
                 ),
             ),
+            monetization_channels=channel_defs,
             swarm=SwarmConfig(
                 enabled=require_bool(swarm, "enabled", "swarm"),
                 default_mode=require_str(swarm, "default_mode", "swarm"),
@@ -376,6 +522,93 @@ class SystemConfig:
                 auto_apply=require_bool(evolution, "auto_apply", "evolution"),
                 protected_paths=protected_paths,
                 verification_commands=verification_commands,
+            ),
+            pruning=PruningConfig(
+                enabled=require_bool(pruning, "enabled", "pruning"),
+                min_age_days=require_float(pruning, "min_age_days", "pruning"),
+                min_feedback_items=require_int(pruning, "min_feedback_items", "pruning"),
+                min_repeat_usage=require_int(pruning, "min_repeat_usage", "pruning"),
+                min_adoption=require_float(pruning, "min_adoption", "pruning"),
+                pause_after_stale_days=require_float(
+                    pruning, "pause_after_stale_days", "pruning"
+                ),
+                sunset_after_stale_days=require_float(
+                    pruning, "sunset_after_stale_days", "pruning"
+                ),
+                sunset_after_zero_cycles=require_int(
+                    pruning, "sunset_after_zero_cycles", "pruning"
+                ),
+                archive_dir=require_str(pruning, "archive_dir", "pruning"),
+            ),
+            capital=CapitalConfig(
+                system_treasury=require_str(capital, "system_treasury", "capital"),
+                owner_vault=require_str(capital, "owner_vault", "capital"),
+                reinvestment_fraction=require_float(
+                    capital, "reinvestment_fraction", "capital"
+                ),
+                min_roi_threshold=require_float(capital, "min_roi_threshold", "capital"),
+                clone_roi_threshold=require_float(
+                    capital, "clone_roi_threshold", "capital"
+                ),
+                max_clone_share=require_float(capital, "max_clone_share", "capital"),
+                bootstrap_spend_usd=require_float(
+                    capital, "bootstrap_spend_usd", "capital"
+                ),
+                categories=require_str_tuple(capital, "categories", "capital"),
+            ),
+            capital_research=CapitalResearchConfig(
+                research_only=require_bool(
+                    research_doc, "research_only", "capital_and_trading_research"
+                ),
+                live_trading_enabled=require_bool(
+                    research_doc,
+                    "live_trading_enabled",
+                    "capital_and_trading_research",
+                ),
+                live_investing_enabled=require_bool(
+                    research_doc,
+                    "live_investing_enabled",
+                    "capital_and_trading_research",
+                ),
+                require_human_compliance_verification=require_bool(
+                    research_doc,
+                    "require_human_compliance_verification",
+                    "capital_and_trading_research",
+                ),
+                require_broker_verification=require_bool(
+                    research_doc,
+                    "require_broker_verification",
+                    "capital_and_trading_research",
+                ),
+                max_system_treasury_loss_fraction=require_float(
+                    research_doc,
+                    "max_system_treasury_loss_fraction",
+                    "capital_and_trading_research",
+                ),
+                forbid_owner_vault=require_bool(
+                    research_doc, "forbid_owner_vault", "capital_and_trading_research"
+                ),
+                paper_capital_units=require_float(
+                    research_doc, "paper_capital_units", "capital_and_trading_research"
+                ),
+                strategies=research_strategies,
+            ),
+            handoff=HandoffConfig(
+                output_dir=require_str(handoff, "output_dir", "handoff"),
+                required_packets=require_str_tuple(
+                    handoff, "required_packets", "handoff"
+                ),
+                human_owned_tasks=require_str_tuple(
+                    handoff, "human_owned_tasks", "handoff"
+                ),
+                system_owned_tasks=require_str_tuple(
+                    handoff, "system_owned_tasks", "handoff"
+                ),
+            ),
+            outreach=OutreachConfig(
+                auto_send_enabled=require_bool(
+                    outreach, "auto_send_enabled", "outreach"
+                )
             ),
             heartbeat=HeartbeatConfig(
                 stale_after_hours=mapping_numbers(
@@ -439,6 +672,45 @@ class SystemConfig:
             if channel.status == "active" and "OWNER_PLACEHOLDER" in channel.url:
                 raise ConfigError(f"active channel {channel.id} still uses a placeholder URL")
 
+        _validate_monetization_channels(self.monetization_channels)
+        _validate_capital_research(self.capital_research)
+
+        if self.pruning.min_age_days < 0:
+            raise ConfigError("pruning.min_age_days cannot be negative")
+        if self.pruning.pause_after_stale_days <= 0:
+            raise ConfigError("pruning.pause_after_stale_days must be positive")
+        if self.pruning.sunset_after_stale_days <= self.pruning.pause_after_stale_days:
+            raise ConfigError("pruning sunset threshold must exceed the pause threshold")
+        if not 0.0 <= self.pruning.min_adoption <= 1.0:
+            raise ConfigError("pruning.min_adoption must be between 0 and 1")
+        _require_safe_relative_dir(self.pruning.archive_dir, "pruning.archive_dir")
+
+        if self.capital.system_treasury == self.capital.owner_vault:
+            raise ConfigError("capital SYSTEM_TREASURY and OWNER_VAULT must be distinct")
+        if not 0.0 <= self.capital.reinvestment_fraction <= 1.0:
+            raise ConfigError("capital.reinvestment_fraction must be between 0 and 1")
+        if self.capital.min_roi_threshold < 0.0:
+            raise ConfigError("capital.min_roi_threshold cannot be negative")
+        if self.capital.clone_roi_threshold < self.capital.min_roi_threshold:
+            raise ConfigError("capital.clone_roi_threshold must exceed the minimum ROI")
+        if not 0.0 <= self.capital.max_clone_share <= 1.0:
+            raise ConfigError("capital.max_clone_share must be between 0 and 1")
+        if self.capital.bootstrap_spend_usd != 0.0:
+            raise InvariantViolation("capital.bootstrap_spend_usd must remain 0.00")
+        if not self.capital.categories:
+            raise ConfigError("capital.categories cannot be empty")
+
+        _require_safe_relative_dir(self.handoff.output_dir, "handoff.output_dir")
+        if not self.handoff.required_packets:
+            raise ConfigError("handoff.required_packets cannot be empty")
+        if set(self.handoff.human_owned_tasks) & set(self.handoff.system_owned_tasks):
+            raise ConfigError("human and system owned tasks must not overlap")
+
+        if self.outreach.auto_send_enabled:
+            raise InvariantViolation(
+                "outreach.auto_send_enabled must remain false; humans send manually"
+            )
+
     def active_niches(self) -> tuple[NicheConfig, ...]:
         return tuple(niche for niche in self.niches if niche.active)
 
@@ -466,6 +738,33 @@ def validate_system_config(config: SystemConfig, guard: InvariantGuard) -> None:
         raise InvariantViolation("automated payouts are forbidden")
     if config.monetization.payment_credentials_in_repo:
         raise InvariantViolation("payment credentials must never live in the repository")
+    channel_kinds = {channel.kind for channel in config.monetization_channels}
+    if channel_kinds != set(invariants.allowed_channel_kinds):
+        raise InvariantViolation(
+            "config monetization channels must match the invariant-allowed kinds"
+        )
+    if invariants.automated_payouts_allowed:
+        raise InvariantViolation("automated payouts must remain forbidden by invariants")
+    research = config.capital_research
+    if research.live_trading_enabled or invariants.live_trading_enabled:
+        raise InvariantViolation("live trading must remain disabled")
+    if research.live_investing_enabled or invariants.live_investing_enabled:
+        raise InvariantViolation("live investing must remain disabled")
+    if not research.research_only or not invariants.capital_research_only:
+        raise InvariantViolation("capital evaluation must remain research-only")
+    if not (
+        research.require_human_compliance_verification
+        and research.require_broker_verification
+        and invariants.require_research_compliance_verification
+        and invariants.require_broker_verification
+    ):
+        raise InvariantViolation(
+            "live research requires human compliance and broker verification"
+        )
+    if not research.forbid_owner_vault or not invariants.owner_vault_excluded_from_research:
+        raise InvariantViolation("OWNER_VAULT must remain excluded from research capital")
+    if invariants.max_live_loss_usd != 0.0:
+        raise InvariantViolation("live research loss cap must remain 0.00")
     if config.swarm.max_children > invariants.swarm_max_children:
         raise InvariantViolation("config swarm cap exceeds the invariants cap")
     if config.compliance.max_github_issues_per_day > invariants.max_github_issues_per_day:
@@ -501,6 +800,179 @@ def validate_system_config(config: SystemConfig, guard: InvariantGuard) -> None:
             if parsed.scheme != "https":
                 raise ConfigError(f"monetization channel {channel.id} must use HTTPS")
 
+    if config.capital.owner_vault != invariants.owner_vault:
+        raise InvariantViolation("config owner vault must match the invariants owner vault")
+    if config.capital.system_treasury != invariants.system_treasury:
+        raise InvariantViolation("config treasury name must match the invariants treasury")
+    if config.capital.bootstrap_spend_usd != invariants.bootstrap_spend_usd:
+        raise InvariantViolation("bootstrap capital spend must remain 0.00")
+    if not set(invariants.human_only_tasks).issubset(set(config.handoff.human_owned_tasks)):
+        raise InvariantViolation(
+            "handoff must assign every human-only responsibility to the human owner"
+        )
+    if guard.is_protected_path(config.pruning.archive_dir):
+        raise InvariantViolation("pruning archive_dir may not point at a protected path")
+    if guard.is_protected_path(config.handoff.output_dir):
+        raise InvariantViolation("handoff output_dir may not point at a protected path")
+    if config.outreach.auto_send_enabled or invariants.outreach_auto_send_enabled:
+        raise InvariantViolation(
+            "outreach must remain human-reviewed and manually sent"
+        )
+
+
+def _require_safe_relative_dir(value: str, context: str) -> None:
+    candidate = Path(value)
+    if candidate.is_absolute() or ".." in candidate.parts or not candidate.parts:
+        raise ConfigError(f"{context} must be a relative path without '..'")
+    normalized = candidate.as_posix()
+    if normalized.startswith(("src/", "config/", ".github/", "tests/")):
+        raise ConfigError(f"{context} must not point at protected source or config files")
+
+
+def _validate_monetization_channels(
+    channels: tuple[MonetizationChannelDef, ...],
+) -> None:
+    kinds = [channel.kind for channel in channels]
+    if set(kinds) != _MONETIZATION_CHANNEL_KINDS or len(set(kinds)) != len(kinds):
+        required = sorted(_MONETIZATION_CHANNEL_KINDS)
+        raise ConfigError(
+            f"monetization_channels must define each kind exactly once: {required}"
+        )
+    if len({channel.id for channel in channels}) != len(channels):
+        raise ConfigError("monetization channel ids must be unique")
+    for channel in channels:
+        if not re.fullmatch(r"[a-z0-9][a-z0-9._-]*", channel.id):
+            raise ConfigError(f"invalid monetization channel id {channel.id!r}")
+        if channel.status not in _CHANNEL_STATUSES:
+            raise ConfigError(f"invalid status for monetization channel {channel.id}")
+        if urlsplit(channel.url).scheme != "https":
+            raise ConfigError(f"monetization channel {channel.id} must use HTTPS")
+        if channel.time_to_first_dollar_days <= 0.0:
+            raise ConfigError(
+                f"monetization channel {channel.id} needs a positive payback horizon"
+            )
+        for field_name in (
+            "build_cost",
+            "maintenance_cost",
+            "platform_fit",
+            "compliance_fit",
+            "conversion_probability",
+        ):
+            value = getattr(channel, field_name)
+            if not 0.0 <= value <= 1.0:
+                raise ConfigError(
+                    f"monetization channel {channel.id}.{field_name} must be 0..1"
+                )
+        if channel.modeled_value_units < 0.0:
+            raise ConfigError(
+                f"monetization channel {channel.id} modeled value cannot be negative"
+            )
+        if channel.build_cost_units < 0.0 or channel.maintenance_units_per_cycle < 0.0:
+            raise ConfigError(
+                f"monetization channel {channel.id} cost units cannot be negative"
+            )
+        if channel.kind == "recurring_saas" and not channel.recurring:
+            raise ConfigError("recurring_saas must be marked recurring")
+        if channel.kind == "bounty" and channel.recurring:
+            raise ConfigError("bounty payouts are one-off and cannot be recurring")
+
+
+def _validate_capital_research(config: CapitalResearchConfig) -> None:
+    if not config.research_only:
+        raise InvariantViolation("capital research must remain research-only")
+    if config.live_trading_enabled or config.live_investing_enabled:
+        raise InvariantViolation(
+            "live trading and live investing require a human-reviewed invariant change"
+        )
+    if not (
+        config.require_human_compliance_verification
+        and config.require_broker_verification
+    ):
+        raise InvariantViolation(
+            "research activation must require human compliance and broker verification"
+        )
+    if not config.forbid_owner_vault:
+        raise InvariantViolation("OWNER_VAULT must remain excluded from research capital")
+    if config.max_system_treasury_loss_fraction != 0.0:
+        raise InvariantViolation(
+            "system treasury loss cap must remain 0.00 while live research is disabled"
+        )
+    if config.paper_capital_units < 0.0:
+        raise ConfigError("paper_capital_units cannot be negative")
+    if not config.strategies:
+        raise ConfigError("capital research requires at least one paper strategy")
+    if len({strategy.id for strategy in config.strategies}) != len(config.strategies):
+        raise ConfigError("research strategy ids must be unique")
+    for strategy in config.strategies:
+        if strategy.kind not in _RESEARCH_STRATEGY_KINDS:
+            raise ConfigError(
+                f"research strategy {strategy.id} kind must be one of "
+                f"{sorted(_RESEARCH_STRATEGY_KINDS)}"
+            )
+        if strategy.live:
+            raise InvariantViolation(
+                f"research strategy {strategy.id} cannot execute live orders"
+            )
+        if strategy.uses_owner_vault:
+            raise InvariantViolation(
+                f"research strategy {strategy.id} cannot use OWNER_VAULT"
+            )
+        if not -1.0 <= strategy.expected_return_fraction <= 1.0:
+            raise ConfigError(
+                f"research strategy {strategy.id} expected return must be -1..1"
+            )
+        if not 0.0 <= strategy.max_drawdown_fraction <= 1.0:
+            raise ConfigError(f"research strategy {strategy.id} drawdown must be 0..1")
+        if not 0.0 <= strategy.fee_fraction <= 0.1:
+            raise ConfigError(f"research strategy {strategy.id} fee must be 0..0.1")
+
+
+def _parse_channel_def(item: object, index: int) -> MonetizationChannelDef:
+    context = f"monetization_channels[{index}]"
+    document = as_mapping(item, context)
+    return MonetizationChannelDef(
+        id=require_str(document, "id", context),
+        kind=require_str(document, "kind", context),
+        label=require_str(document, "label", context),
+        url=require_str(document, "url", context),
+        status=require_str(document, "status", context),
+        requires_human_setup=require_bool(document, "requires_human_setup", context),
+        recurring=require_bool(document, "recurring", context),
+        platform_billing=require_bool(document, "platform_billing", context),
+        time_to_first_dollar_days=require_float(
+            document, "time_to_first_dollar_days", context
+        ),
+        build_cost=require_float(document, "build_cost", context),
+        maintenance_cost=require_float(document, "maintenance_cost", context),
+        platform_fit=require_float(document, "platform_fit", context),
+        compliance_fit=require_float(document, "compliance_fit", context),
+        modeled_value_units=require_float(document, "modeled_value_units", context),
+        conversion_probability=require_float(
+            document, "conversion_probability", context
+        ),
+        build_cost_units=require_float(document, "build_cost_units", context),
+        maintenance_units_per_cycle=require_float(
+            document, "maintenance_units_per_cycle", context
+        ),
+    )
+
+
+def _parse_research_strategy(document: dict[str, object]) -> ResearchStrategyConfig:
+    context = "capital_and_trading_research.strategies"
+    return ResearchStrategyConfig(
+        id=require_str(document, "id", context),
+        kind=require_str(document, "kind", context),
+        expected_return_fraction=require_float(
+            document, "expected_return_fraction", context
+        ),
+        max_drawdown_fraction=require_float(
+            document, "max_drawdown_fraction", context
+        ),
+        fee_fraction=require_float(document, "fee_fraction", context),
+        live=require_bool(document, "live", context),
+        uses_owner_vault=require_bool(document, "uses_owner_vault", context),
+    )
+
 
 def _parse_repo(document: dict[str, object]) -> RepoConfig:
     return RepoConfig(
@@ -529,8 +1001,21 @@ def _parse_niche(item: object, index: int) -> NicheConfig:
         product_name=require_str(document, "product_name", f"niches[{index}]"),
         product_type=require_str(document, "product_type", f"niches[{index}]"),
         description=require_str(document, "description", f"niches[{index}]"),
+        workflow_bottleneck=require_str(
+            document, "workflow_bottleneck", f"niches[{index}]"
+        ),
+        budget_owner=require_str(document, "budget_owner", f"niches[{index}]"),
+        reliability_rationale=require_str(
+            document, "reliability_rationale", f"niches[{index}]"
+        ),
         keywords=require_str_tuple(document, "keywords", f"niches[{index}]"),
         pain=require_float(document, "pain", f"niches[{index}]"),
+        urgency=require_float(document, "urgency", f"niches[{index}]"),
+        failure_cost=require_float(document, "failure_cost", f"niches[{index}]"),
+        recurrence=require_float(document, "recurrence", f"niches[{index}]"),
+        recurring_willingness_to_pay=require_float(
+            document, "recurring_willingness_to_pay", f"niches[{index}]"
+        ),
         willingness_to_pay=require_float(document, "willingness_to_pay", f"niches[{index}]"),
         buildability=require_float(document, "buildability", f"niches[{index}]"),
         competition=require_float(document, "competition", f"niches[{index}]"),
@@ -539,6 +1024,10 @@ def _parse_niche(item: object, index: int) -> NicheConfig:
     )
     for field_name in (
         "pain",
+        "urgency",
+        "failure_cost",
+        "recurrence",
+        "recurring_willingness_to_pay",
         "willingness_to_pay",
         "buildability",
         "competition",
@@ -547,6 +1036,12 @@ def _parse_niche(item: object, index: int) -> NicheConfig:
         value = getattr(niche, field_name)
         if not 0.0 <= value <= 1.0:
             raise ConfigError(f"niches[{index}].{field_name} must be between 0 and 1")
+    for field_name in ("workflow_bottleneck", "budget_owner", "reliability_rationale"):
+        value = getattr(niche, field_name)
+        if len(value) < 12:
+            raise ConfigError(
+                f"niches[{index}].{field_name} must articulate a concrete B2B rationale"
+            )
     if not re.fullmatch(r"[a-z0-9][a-z0-9-]*", niche.id):
         raise ConfigError(f"invalid niche id {niche.id!r}")
     return niche

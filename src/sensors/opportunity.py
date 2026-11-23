@@ -31,6 +31,9 @@ class OpportunitySignal:
     strength: float
     evidence_ids: tuple[str, ...]
     created_at: str
+    workflow_bottleneck: str = ""
+    budget_owner: str = ""
+    reliability_rationale: str = ""
 
     def to_json(self) -> JsonObject:
         return {
@@ -42,6 +45,9 @@ class OpportunitySignal:
             "strength": round(self.strength, 4),
             "evidence_ids": list(self.evidence_ids),
             "created_at": self.created_at,
+            "workflow_bottleneck": self.workflow_bottleneck,
+            "budget_owner": self.budget_owner,
+            "reliability_rationale": self.reliability_rationale,
         }
 
 
@@ -83,6 +89,9 @@ class OpportunityScanner:
                     strength=strength,
                     evidence_ids=evidence,
                     created_at=iso_now(self._clock()),
+                    workflow_bottleneck=niche.workflow_bottleneck,
+                    budget_owner=niche.budget_owner,
+                    reliability_rationale=niche.reliability_rationale,
                 )
             )
         return sorted(signals, key=lambda signal: (-signal.strength, signal.niche_id))
@@ -94,31 +103,37 @@ class OpportunityScanner:
         feedback: Sequence[FeedbackItem],
         ranked_ids: Sequence[str],
     ) -> tuple[str, float, str]:
+        context = (
+            f"Bottleneck: {niche.workflow_bottleneck} "
+            f"Budget owner: {niche.budget_owner}. "
+            f"Recurring reliability matters: {niche.reliability_rationale}"
+        )
         if score.feedback_pressure >= _URGENT_PRESSURE:
             return (
                 "urgent_feedback",
                 min(1.0, 0.6 + score.feedback_pressure * 0.4),
                 f"{len(feedback)} high-priority feedback items demand a fast fix for "
-                f"{niche.title}.",
+                f"{niche.title}. {context}",
             )
         if feedback:
             return (
                 "feedback_intake",
                 min(1.0, 0.3 + score.feedback_pressure),
                 f"{len(feedback)} sanitized feedback items inform the next {niche.title} "
-                "increment.",
+                f"increment. {context}",
             )
         if ranked_ids and niche.id == ranked_ids[0] and score.total >= _FOCUS_TOTAL:
             return (
                 "focus_validation",
                 score.total * 0.75,
                 f"{niche.title} is the strongest seed niche; validate willingness to pay "
-                "with a zero-cost release.",
+                f"with a zero-cost release. {context}",
             )
         return (
             "seed_validation",
             score.total * 0.5,
-            f"Publish a deterministic {niche.title} artifact and watch for real feedback.",
+            f"Publish a deterministic {niche.title} artifact and watch for real feedback. "
+            f"{context}",
         )
 
     def _title(self, niche: NicheConfig, kind: str, feedback_count: int) -> str:

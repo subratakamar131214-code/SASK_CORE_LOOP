@@ -36,6 +36,12 @@ Child replica for the `{niche_id}` niche.
 - Replication: disabled for children
 - Human approval: {approval_by} ({approval_reference})
 
+## B2B rationale
+
+- Workflow bottleneck: {workflow_bottleneck}
+- Budget owner: {budget_owner}
+- Why recurring reliability matters: {reliability_rationale}
+
 ## Bootstrap
 
 1. Review `config/child_system.yaml`; only `{niche_id}` is active.
@@ -235,6 +241,9 @@ class SwarmSpawner:
             "replication_allowed": False,
             "max_children": 0,
             "secrets_location": "platform secret store only",
+            "workflow_bottleneck": niche.workflow_bottleneck,
+            "budget_owner": niche.budget_owner,
+            "reliability_rationale": niche.reliability_rationale,
         }
         write_json_atomic(workspace / "config" / "child_policy.json", policy)
         telemetry: JsonObject = {
@@ -256,6 +265,9 @@ class SwarmSpawner:
             mode=mode,
             approval_by=approval.approved_by,
             approval_reference=approval.reference,
+            workflow_bottleneck=niche.workflow_bottleneck,
+            budget_owner=niche.budget_owner,
+            reliability_rationale=niche.reliability_rationale,
         )
         write_text_atomic(workspace / "README.md", readme)
         write_text_atomic(

@@ -31,6 +31,9 @@ LEDGER_KINDS = frozenset(
         "upgrade_verified",
         "alert",
         "compliance",
+        "prune",
+        "capital",
+        "handoff",
     }
 )
 
@@ -202,6 +205,41 @@ class Ledger:
             if not isinstance(child_digest, str):
                 raise StateError("spawn entries require child_invariants_digest")
             self._guard.assert_child_invariants(child_digest)
+        elif kind == "capital":
+            spent = payload.get("spent_usd")
+            settled = payload.get("settled_revenue_usd")
+            if (
+                not isinstance(spent, (int, float))
+                or isinstance(spent, bool)
+                or not isinstance(settled, (int, float))
+                or isinstance(settled, bool)
+            ):
+                raise StateError(
+                    "capital entries require numeric spent_usd and settled_revenue_usd"
+                )
+            if float(spent) < 0.0 or float(settled) < 0.0:
+                raise StateError("capital amounts cannot be negative")
+            if float(spent) > float(settled) + 1e-9:
+                raise InvariantViolation(
+                    "capital spend cannot exceed settled treasury revenue"
+                )
+            if payload.get("owner_vault_touched") is not False:
+                raise InvariantViolation("OWNER_VAULT must remain untouched")
+            if payload.get("source_account") == "OWNER_VAULT":
+                raise InvariantViolation("OWNER_VAULT cannot fund reinvestment")
+        elif kind == "prune":
+            decisions = payload.get("decisions")
+            if not isinstance(decisions, list):
+                raise StateError("prune entries require a decisions list")
+            if any(
+                isinstance(item, dict) and str(item.get("asset_id", "")).upper() == "OWNER_VAULT"
+                for item in decisions
+            ):
+                raise InvariantViolation("OWNER_VAULT can never be pruned")
+        elif kind == "handoff":
+            packets = payload.get("packets")
+            if not isinstance(packets, list) or not packets:
+                raise StateError("handoff entries require packets")
 
     def ensure_genesis(self, invariants_digest: str) -> None:
         if self.entries():
@@ -246,6 +284,15 @@ class Ledger:
 
     def record_cycle(self, payload: Mapping[str, JsonValue]) -> JsonObject:
         return self.append("cycle", payload)
+
+    def record_pruning(self, payload: Mapping[str, JsonValue]) -> JsonObject:
+        return self.append("prune", payload)
+
+    def record_capital(self, payload: Mapping[str, JsonValue]) -> JsonObject:
+        return self.append("capital", payload)
+
+    def record_handoff(self, payload: Mapping[str, JsonValue]) -> JsonObject:
+        return self.append("handoff", payload)
 
     def record_alert(self, message: str, *, component: str) -> JsonObject:
         return self.append("alert", {"message": message, "component": component})

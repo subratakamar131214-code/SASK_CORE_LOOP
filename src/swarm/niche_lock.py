@@ -15,6 +15,13 @@ from src.swarm.models import ChildReplica
 
 SCHEMA_VERSION = 1
 
+_ALLOWED_TRANSITIONS: dict[str, frozenset[str]] = {
+    "planned": frozenset({"active", "paused", "retired"}),
+    "active": frozenset({"paused", "retired"}),
+    "paused": frozenset({"active", "retired"}),
+    "retired": frozenset(),
+}
+
 
 class NicheLock:
     def __init__(
@@ -63,6 +70,41 @@ class NicheLock:
             state["children"] = [
                 updated.to_json() if item.child_id == child_id else item.to_json()
                 for item in self._children(state)
+            ]
+            state["updated_at"] = iso_now()
+            self._write(state)
+            return updated
+
+    def transition(self, child_id: str, status: str) -> ChildReplica:
+        if status not in {"active", "paused", "retired"}:
+            raise StateError(f"unsupported child transition status: {status!r}")
+        with self._guard_lock():
+            state = self._read()
+            children = self._children(state)
+            target = self._find(children, child_id)
+            if status not in _ALLOWED_TRANSITIONS[target.status]:
+                raise StateError(
+                    f"illegal child transition {target.status!r} -> {status!r}"
+                )
+            if status == "active":
+                if any(
+                    item.child_id != child_id
+                    and item.status == "active"
+                    and item.niche_id == target.niche_id
+                    for item in children
+                ):
+                    raise InvariantViolation(
+                        f"niche {target.niche_id!r} is already locked by another child"
+                    )
+                active = [item for item in children if item.status == "active"]
+                if len(active) >= self._max_children:
+                    raise InvariantViolation(
+                        f"swarm child cap reached ({len(active)}/{self._max_children})"
+                    )
+            updated = replace(target, status=status)
+            state["children"] = [
+                updated.to_json() if item.child_id == child_id else item.to_json()
+                for item in children
             ]
             state["updated_at"] = iso_now()
             self._write(state)

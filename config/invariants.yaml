@@ -38,7 +38,12 @@ repository:
     - src/core/invariants.py
     - src/core/redact.py
     - src/sensors/sanitizer.py
+    - src/sensors/pain_interviews.py
+    - src/sensors/channel_sensors.py
+    - src/sensors/outcome_simulator.py
     - src/compliance/
+    - src/capital/
+    - src/handoff/
     - .github/workflows/
 
 network:
@@ -68,3 +73,44 @@ compliance:
   require_license_allowlist: true
   respect_robots_txt: true
   forbid_unsolicited_outreach: true
+
+monetization:
+  allowed_channel_kinds:
+    - marketplace
+    - bounty
+    - paid_template
+    - custom_audit
+    - recurring_saas
+  automated_payouts_allowed: false
+
+capital_research:
+  research_only: true
+  live_trading_enabled: false
+  live_investing_enabled: false
+  require_human_compliance_verification: true
+  require_broker_verification: true
+  max_live_loss_usd: 0.00
+  owner_vault_excluded: true
+
+ownership:
+  owner_vault: OWNER_VAULT
+  system_treasury: SYSTEM_TREASURY
+  owner_vault_untouchable: true
+  bootstrap_spend_usd: 0.00
+  system_may_prepare_handoffs: true
+  interview_insights_highest_priority: true
+  human_only_tasks:
+    - payment_and_billing_setup
+    - legal_entity_and_contracts
+    - tax_registration_and_filings
+    - bank_and_payout_accounts
+    - design_partner_calls
+    - customer_interviews
+    - trust_building
+    - partner_outreach_and_negotiation
+    - word_of_mouth
+    - broker_and_exchange_compliance
+    - live_trading_activation
+
+outreach:
+  auto_send_enabled: false

@@ -258,6 +258,11 @@ class FeedbackIngestor:
         engagement = 1.0 + min(1.0, math.log1p(max(0, reactions)) / 5.0)
         customer_multiplier = 1.75 if is_customer else 1.0
         urgency = 1.5 if labels & {"critical", "p1", "urgent", "regression"} else 1.0
+        if "pain_interview" in labels:
+            recurring = "recurring_wtp" in labels and "verified" in labels
+            urgency = 3.0 if recurring else 2.5
+        elif "interview" in labels:
+            urgency = max(urgency, 2.0)
         return round(
             source_weight * kind_multiplier * engagement * customer_multiplier * urgency,
             4,

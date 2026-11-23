@@ -56,6 +56,16 @@ def generate_docs(spec: ProductSpec) -> dict[str, str]:
     feedback_lines = "\n".join(
         f"- {title}" for title in spec.feedback_titles
     ) or "- No external feedback yet; validate with a zero-cost release."
+    business = ""
+    if spec.workflow_bottleneck:
+        business = f"""\
+## Business context
+
+- Workflow bottleneck: {spec.workflow_bottleneck}
+- Budget owner: {spec.budget_owner}
+- Why recurring reliability matters: {spec.reliability_rationale}
+
+"""
     readme = f"""\
 # {spec.product_name}
 
@@ -68,7 +78,7 @@ def generate_docs(spec: ProductSpec) -> dict[str, str]:
 
 {feature_lines}
 
-## Quick start
+{business}## Quick start
 
 ```bash
 python -m pip install .

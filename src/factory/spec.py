@@ -29,6 +29,9 @@ class ProductSpec:
     features: tuple[str, ...] = ()
     pro_features: tuple[str, ...] = ()
     feedback_titles: tuple[str, ...] = ()
+    workflow_bottleneck: str = ""
+    budget_owner: str = ""
+    reliability_rationale: str = ""
 
     @classmethod
     def create(
@@ -42,6 +45,9 @@ class ProductSpec:
         features: tuple[str, ...],
         pro_features: tuple[str, ...],
         feedback_titles: tuple[str, ...] = (),
+        workflow_bottleneck: str = "",
+        budget_owner: str = "",
+        reliability_rationale: str = "",
     ) -> ProductSpec:
         return cls(
             niche_id=niche_id,
@@ -53,6 +59,9 @@ class ProductSpec:
             features=features,
             pro_features=pro_features,
             feedback_titles=feedback_titles,
+            workflow_bottleneck=workflow_bottleneck,
+            budget_owner=budget_owner,
+            reliability_rationale=reliability_rationale,
         )
 
     def to_json(self) -> JsonObject:
@@ -64,4 +73,7 @@ class ProductSpec:
             "version": self.version,
             "license": self.license_id,
             "feedback_titles": list(self.feedback_titles),
+            "workflow_bottleneck": self.workflow_bottleneck,
+            "budget_owner": self.budget_owner,
+            "reliability_rationale": self.reliability_rationale,
         }
