@@ -1,0 +1,28 @@
+[
+  {
+    "budget_owner": "Platform or release engineering manager",
+    "created_at": "2026-11-24T22:05:56Z",
+    "evidence_ids": [],
+    "id": "opp-9f7a24b5c884",
+    "kind": "focus_validation",
+    "niche_id": "ci-failure-diagnoser",
+    "rationale": "CI/CD failure diagnostics is the strongest seed niche; validate willingness to pay with a zero-cost release. Bottleneck: Release engineering loses hours every week triaging red pipelines by hand, which blocks deploys and hides the real failing dependency. Budget owner: Platform or release engineering manager. Recurring reliability matters: Each recurring outage burns paid on-call time and risks missed delivery commitments, so teams pay for consistent diagnosis on every failure.",
+    "reliability_rationale": "Each recurring outage burns paid on-call time and risks missed delivery commitments, so teams pay for consistent diagnosis on every failure.",
+    "strength": 0.4847,
+    "title": "Validate demand for sask-ci-diagnoser",
+    "workflow_bottleneck": "Release engineering loses hours every week triaging red pipelines by hand, which blocks deploys and hides the real failing dependency."
+  },
+  {
+    "budget_owner": "API platform or integration engineering lead",
+    "created_at": "2026-11-24T22:05:56Z",
+    "evidence_ids": [],
+    "id": "opp-6f04f01b6537",
+    "kind": "seed_validation",
+    "niche_id": "openapi-schema-migrator",
+    "rationale": "Publish a deterministic OpenAPI schema migration reports artifact and watch for real feedback. Bottleneck: API teams break downstream consumers during schema releases and cannot prove compatibility before shipping. Budget owner: API platform or integration engineering lead. Recurring reliability matters: A missed breaking change causes recurring integration incidents and customer escalations, so compatibility checks must run on every release.",
+    "reliability_rationale": "A missed breaking change causes recurring integration incidents and customer escalations, so compatibility checks must run on every release.",
+    "strength": 0.2905,
+    "title": "Probe sask-openapi-migrator with a zero-cost artifact",
+    "workflow_bottleneck": "API teams break downstream consumers during schema releases and cannot prove compatibility before shipping."
+  }
+]

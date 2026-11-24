@@ -1,0 +1,29 @@
+{
+  "allocations": [],
+  "available_usd": 0.0,
+  "owner_vault_touched": false,
+  "phase": "BOOTSTRAP",
+  "reason": "bootstrap/validate phases spend nothing",
+  "rejected": [
+    {
+      "option_id": "reliability-ci-failure-diagnoser",
+      "reason": "no settled revenue available"
+    },
+    {
+      "option_id": "distribution-ci-failure-diagnoser",
+      "reason": "no settled revenue available"
+    },
+    {
+      "option_id": "oci-graduation-ci-failure-diagnoser",
+      "reason": "no settled revenue available"
+    },
+    {
+      "option_id": "clone-low-value",
+      "reason": "no settled revenue available"
+    }
+  ],
+  "settled_revenue_usd": 0.0,
+  "source_account": "SYSTEM_TREASURY",
+  "spent_usd": 0.0,
+  "treasury_balance_usd": 0.0
+}

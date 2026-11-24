@@ -1,0 +1,277 @@
+{
+  "allocation": {
+    "effort_shares": {
+      "ci-failure-diagnoser": 0.5265645371577574,
+      "openapi-schema-migrator": 0.47343546284224247
+    },
+    "money_allocation_usd": 0.0,
+    "previous_state": "BOOTSTRAP",
+    "reason": "hold",
+    "state": "BOOTSTRAP"
+  },
+  "builds": [
+    {
+      "digest": "28b4dcacbc07c45c12211374dc82eb057979d0ca5ce7289dcc5f3f375fa7b45d",
+      "features": [
+        "Classifies failed CI logs into seven deterministic categories.",
+        "Surfaces evidence lines and remediation hints.",
+        "Emits JSON for CI gates and automation.",
+        "Runs offline with no third-party runtime dependencies."
+      ],
+      "feedback_count": 0,
+      "files": [
+        "LICENSE",
+        "PRO_FEATURES.md",
+        "README.md",
+        "SECURITY.md",
+        "USAGE.md",
+        "pyproject.toml",
+        "src/sask_ci_diagnoser/__init__.py",
+        "src/sask_ci_diagnoser/__main__.py",
+        "src/sask_ci_diagnoser/classifier.py",
+        "src/sask_ci_diagnoser/cli.py",
+        "src/sask_ci_diagnoser/models.py",
+        "tests/test_ci_failure_diagnoser.py"
+      ],
+      "niche_id": "ci-failure-diagnoser",
+      "package_name": "sask_ci_diagnoser",
+      "product_name": "sask-ci-diagnoser",
+      "product_type": "ci_failure_diagnoser",
+      "root": "build/ci-failure-diagnoser",
+      "version": "0.1.0"
+    },
+    {
+      "digest": "deb0af922cc133aa6d4d437c0801ede312b8861b20f50ae8b2bcf5e519a0d02a",
+      "features": [
+        "Detects removed operations and parameters.",
+        "Flags parameter type changes and new required request fields.",
+        "Reports removed response fields for consumers.",
+        "Produces Markdown or JSON reports with CI exit codes."
+      ],
+      "feedback_count": 0,
+      "files": [
+        "LICENSE",
+        "PRO_FEATURES.md",
+        "README.md",
+        "SECURITY.md",
+        "USAGE.md",
+        "pyproject.toml",
+        "src/sask_openapi_migrator/__init__.py",
+        "src/sask_openapi_migrator/__main__.py",
+        "src/sask_openapi_migrator/cli.py",
+        "src/sask_openapi_migrator/diff.py",
+        "src/sask_openapi_migrator/io.py",
+        "tests/test_openapi_schema_migrator.py"
+      ],
+      "niche_id": "openapi-schema-migrator",
+      "package_name": "sask_openapi_migrator",
+      "product_name": "sask-openapi-migrator",
+      "product_type": "openapi_schema_migrator",
+      "root": "build/openapi-schema-migrator",
+      "version": "0.1.0"
+    }
+  ],
+  "capital": {
+    "allocations": [],
+    "available_usd": 0.0,
+    "owner_vault_touched": false,
+    "phase": "BOOTSTRAP",
+    "reason": "bootstrap/validate phases spend nothing",
+    "rejected": [
+      {
+        "option_id": "reliability-ci-failure-diagnoser",
+        "reason": "no settled revenue available"
+      },
+      {
+        "option_id": "distribution-ci-failure-diagnoser",
+        "reason": "no settled revenue available"
+      },
+      {
+        "option_id": "oci-graduation-ci-failure-diagnoser",
+        "reason": "no settled revenue available"
+      },
+      {
+        "option_id": "clone-low-value",
+        "reason": "no settled revenue available"
+      }
+    ],
+    "settled_revenue_usd": 0.0,
+    "source_account": "SYSTEM_TREASURY",
+    "spent_usd": 0.0,
+    "treasury_balance_usd": 0.0
+  },
+  "cycle": 9,
+  "duration_seconds": 0.053,
+  "feedback": {
+    "accepted": 0,
+    "dropped": 0,
+    "raw_count": 0,
+    "redactions": {},
+    "top": []
+  },
+  "funnel": {
+    "basis": "local aggregate events and sanitized feedback only; no cookies, device identifiers, or user tracking",
+    "conversion": {
+      "download_rate": 0.0,
+      "feedback_rate": 0.0,
+      "intent_rate": 0.0
+    },
+    "counts": {
+      "artifact_download": 0,
+      "feedback_signal": 0,
+      "impression": 0,
+      "paid_intent": 0
+    },
+    "first_ts": null,
+    "invalid_events": 0,
+    "last_ts": null,
+    "total_events": 0
+  },
+  "notes_providers": [
+    "deterministic",
+    "deterministic"
+  ],
+  "opportunities": [
+    {
+      "budget_owner": "Platform or release engineering manager",
+      "created_at": "2026-11-24T22:05:56Z",
+      "evidence_ids": [],
+      "id": "opp-9f7a24b5c884",
+      "kind": "focus_validation",
+      "niche_id": "ci-failure-diagnoser",
+      "rationale": "CI/CD failure diagnostics is the strongest seed niche; validate willingness to pay with a zero-cost release. Bottleneck: Release engineering loses hours every week triaging red pipelines by hand, which blocks deploys and hides the real failing dependency. Budget owner: Platform or release engineering manager. Recurring reliability matters: Each recurring outage burns paid on-call time and risks missed delivery commitments, so teams pay for consistent diagnosis on every failure.",
+      "reliability_rationale": "Each recurring outage burns paid on-call time and risks missed delivery commitments, so teams pay for consistent diagnosis on every failure.",
+      "strength": 0.4847,
+      "title": "Validate demand for sask-ci-diagnoser",
+      "workflow_bottleneck": "Release engineering loses hours every week triaging red pipelines by hand, which blocks deploys and hides the real failing dependency."
+    },
+    {
+      "budget_owner": "API platform or integration engineering lead",
+      "created_at": "2026-11-24T22:05:56Z",
+      "evidence_ids": [],
+      "id": "opp-6f04f01b6537",
+      "kind": "seed_validation",
+      "niche_id": "openapi-schema-migrator",
+      "rationale": "Publish a deterministic OpenAPI schema migration reports artifact and watch for real feedback. Bottleneck: API teams break downstream consumers during schema releases and cannot prove compatibility before shipping. Budget owner: API platform or integration engineering lead. Recurring reliability matters: A missed breaking change causes recurring integration incidents and customer escalations, so compatibility checks must run on every release.",
+      "reliability_rationale": "A missed breaking change causes recurring integration incidents and customer escalations, so compatibility checks must run on every release.",
+      "strength": 0.2905,
+      "title": "Probe sask-openapi-migrator with a zero-cost artifact",
+      "workflow_bottleneck": "API teams break downstream consumers during schema releases and cannot prove compatibility before shipping."
+    }
+  ],
+  "packages": [
+    {
+      "archive": "dist/ci-failure-diagnoser/sask-ci-diagnoser-0.1.0.zip",
+      "created_at": "2026-11-24T22:05:56Z",
+      "file_count": 13,
+      "license": "MIT",
+      "niche_id": "ci-failure-diagnoser",
+      "product_name": "sask-ci-diagnoser",
+      "sha256": "f2f4a0ddc9428b80a3bafd81894652ee46d475a511995d83d1ffca8eb033a11f",
+      "size_bytes": 8689,
+      "version": "0.1.0"
+    },
+    {
+      "archive": "dist/openapi-schema-migrator/sask-openapi-migrator-0.1.0.zip",
+      "created_at": "2026-11-24T22:05:56Z",
+      "file_count": 13,
+      "license": "MIT",
+      "niche_id": "openapi-schema-migrator",
+      "product_name": "sask-openapi-migrator",
+      "sha256": "38cd8bc1d2be36e23dcd64f17bfe804f81ea64fbee0f32af784e82abe18f1289",
+      "size_bytes": 9791,
+      "version": "0.1.0"
+    }
+  ],
+  "pages": [
+    {
+      "channel_count": 4,
+      "created_at": "2026-11-24T22:05:56Z",
+      "niche_id": "ci-failure-diagnoser",
+      "path": "dist/site/ci-failure-diagnoser/index.html",
+      "sha256": "7fe596a2e775441672bd216d67de228831636c29bf9b223ba5f2ac4a29f47eec",
+      "size_bytes": 3026
+    },
+    {
+      "channel_count": 4,
+      "created_at": "2026-11-24T22:05:56Z",
+      "niche_id": "openapi-schema-migrator",
+      "path": "dist/site/openapi-schema-migrator/index.html",
+      "sha256": "78f2b7a0b073f7395f273e2c5e0aaf66c07507c212502b2b0c620a48b93a13a9",
+      "size_bytes": 3037
+    }
+  ],
+  "releases": [
+    {
+      "archive": "dist/ci-failure-diagnoser/sask-ci-diagnoser-0.1.0.zip",
+      "archive_sha256": "f2f4a0ddc9428b80a3bafd81894652ee46d475a511995d83d1ffca8eb033a11f",
+      "build_digest": "28b4dcacbc07c45c12211374dc82eb057979d0ca5ce7289dcc5f3f375fa7b45d",
+      "created_at": "2026-11-24T22:05:56Z",
+      "landing_page": "dist/site/ci-failure-diagnoser/index.html",
+      "niche_id": "ci-failure-diagnoser",
+      "notes": "Deterministic state release (offline): summarize verified maintenance changes, sanitized telemetry counts, and known limitations. This release makes no financial promises.\n\nOffline fallback digest: 0dba887a1468. No cloud endpoint was contacted.",
+      "product_name": "sask-ci-diagnoser",
+      "published_url": null,
+      "release_id": "rel-058b19946051",
+      "status": "prepared",
+      "tag": "v0.1.0-ci-failure-diagnoser",
+      "version": "0.1.0"
+    },
+    {
+      "archive": "dist/openapi-schema-migrator/sask-openapi-migrator-0.1.0.zip",
+      "archive_sha256": "38cd8bc1d2be36e23dcd64f17bfe804f81ea64fbee0f32af784e82abe18f1289",
+      "build_digest": "deb0af922cc133aa6d4d437c0801ede312b8861b20f50ae8b2bcf5e519a0d02a",
+      "created_at": "2026-11-24T22:05:56Z",
+      "landing_page": "dist/site/openapi-schema-migrator/index.html",
+      "niche_id": "openapi-schema-migrator",
+      "notes": "Deterministic state release (offline): summarize verified maintenance changes, sanitized telemetry counts, and known limitations. This release makes no financial promises.\n\nOffline fallback digest: de073efa1611. No cloud endpoint was contacted.",
+      "product_name": "sask-openapi-migrator",
+      "published_url": null,
+      "release_id": "rel-639589dcf1bc",
+      "status": "prepared",
+      "tag": "v0.1.0-openapi-schema-migrator",
+      "version": "0.1.0"
+    }
+  ],
+  "scores": [
+    {
+      "components": {
+        "buildability": 0.96,
+        "competition_inverse": 0.55,
+        "compliance_safety": 0.95,
+        "failure_cost": 0.95,
+        "feedback": 0.0,
+        "pain": 0.92,
+        "recurrence": 0.9,
+        "recurring_willingness_to_pay": 0.82,
+        "urgency": 0.96,
+        "willingness_to_pay": 0.78
+      },
+      "evidence_ids": [],
+      "feedback_count": 0,
+      "feedback_pressure": 0.0,
+      "niche_id": "ci-failure-diagnoser",
+      "total": 0.6462
+    },
+    {
+      "components": {
+        "buildability": 0.94,
+        "competition_inverse": 0.45,
+        "compliance_safety": 0.96,
+        "failure_cost": 0.85,
+        "feedback": 0.0,
+        "pain": 0.85,
+        "recurrence": 0.72,
+        "recurring_willingness_to_pay": 0.7,
+        "urgency": 0.8,
+        "willingness_to_pay": 0.72
+      },
+      "evidence_ids": [],
+      "feedback_count": 0,
+      "feedback_pressure": 0.0,
+      "niche_id": "openapi-schema-migrator",
+      "total": 0.581
+    }
+  ],
+  "within_cycle_budget": true
+}

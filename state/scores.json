@@ -1,0 +1,40 @@
+[
+  {
+    "components": {
+      "buildability": 0.96,
+      "competition_inverse": 0.55,
+      "compliance_safety": 0.95,
+      "failure_cost": 0.95,
+      "feedback": 0.0,
+      "pain": 0.92,
+      "recurrence": 0.9,
+      "recurring_willingness_to_pay": 0.82,
+      "urgency": 0.96,
+      "willingness_to_pay": 0.78
+    },
+    "evidence_ids": [],
+    "feedback_count": 0,
+    "feedback_pressure": 0.0,
+    "niche_id": "ci-failure-diagnoser",
+    "total": 0.6462
+  },
+  {
+    "components": {
+      "buildability": 0.94,
+      "competition_inverse": 0.45,
+      "compliance_safety": 0.96,
+      "failure_cost": 0.85,
+      "feedback": 0.0,
+      "pain": 0.85,
+      "recurrence": 0.72,
+      "recurring_willingness_to_pay": 0.7,
+      "urgency": 0.8,
+      "willingness_to_pay": 0.72
+    },
+    "evidence_ids": [],
+    "feedback_count": 0,
+    "feedback_pressure": 0.0,
+    "niche_id": "openapi-schema-migrator",
+    "total": 0.581
+  }
+]
