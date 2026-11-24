@@ -1,0 +1,21 @@
+{
+  "alerts_recorded": 2,
+  "alerts_suppressed": 2,
+  "chain_valid": true,
+  "checked_at": "2026-11-24T16:40:26Z",
+  "healthy": false,
+  "last": {
+    "cycle": null,
+    "heartbeat": null,
+    "swarm": null,
+    "upgrade": null
+  },
+  "stale": [
+    "required workflow has no recorded run: revenue-cycle.yml",
+    "no cycle heartbeat recorded",
+    "no heartbeat heartbeat recorded",
+    "no upgrade heartbeat recorded"
+  ],
+  "status": "stale",
+  "workflow_file": "heartbeat-immortality.yml"
+}
