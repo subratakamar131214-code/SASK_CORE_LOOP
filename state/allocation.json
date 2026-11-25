@@ -5,6 +5,6 @@
   },
   "money_allocation_usd": 0.0,
   "previous_state": "BOOTSTRAP",
-  "reason": "hold",
-  "state": "BOOTSTRAP"
+  "reason": "first verified cycle completed; begin validation",
+  "state": "VALIDATE"
 }

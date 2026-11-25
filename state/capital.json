@@ -2,7 +2,7 @@
   "allocations": [],
   "available_usd": 0.0,
   "owner_vault_touched": false,
-  "phase": "BOOTSTRAP",
+  "phase": "VALIDATE",
   "reason": "bootstrap/validate phases spend nothing",
   "rejected": [
     {
