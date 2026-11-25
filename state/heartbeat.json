@@ -1,19 +1,18 @@
 {
   "alerts_recorded": 2,
-  "alerts_suppressed": 2,
+  "alerts_suppressed": 1,
   "chain_valid": true,
-  "checked_at": "2026-11-24T16:40:26Z",
+  "checked_at": "2026-11-25T01:43:56Z",
   "healthy": false,
   "last": {
-    "cycle": null,
-    "heartbeat": null,
+    "cycle": "2026-11-24T22:05:56Z",
+    "heartbeat": "2026-11-24T16:40:26Z",
     "swarm": null,
     "upgrade": null
   },
   "stale": [
     "required workflow has no recorded run: revenue-cycle.yml",
-    "no cycle heartbeat recorded",
-    "no heartbeat heartbeat recorded",
+    "heartbeat heartbeat is stale (8h limit)",
     "no upgrade heartbeat recorded"
   ],
   "status": "stale",
