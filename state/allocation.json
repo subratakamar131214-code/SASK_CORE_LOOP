@@ -4,7 +4,7 @@
     "openapi-schema-migrator": 0.47343546284224247
   },
   "money_allocation_usd": 0.0,
-  "previous_state": "BOOTSTRAP",
-  "reason": "first verified cycle completed; begin validation",
+  "previous_state": "VALIDATE",
+  "reason": "hold",
   "state": "VALIDATE"
 }
