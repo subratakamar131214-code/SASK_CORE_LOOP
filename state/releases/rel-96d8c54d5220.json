@@ -1,0 +1,15 @@
+{
+  "archive": "dist/ci-failure-diagnoser/sask-ci-diagnoser-0.1.0.zip",
+  "archive_sha256": "8546e2f31adcc4bd8210e8eab9af28d8134588f97c13926719bb6c8fe029cb68",
+  "build_digest": "28b4dcacbc07c45c12211374dc82eb057979d0ca5ce7289dcc5f3f375fa7b45d",
+  "created_at": "2026-11-26T21:08:29Z",
+  "landing_page": "dist/site/ci-failure-diagnoser/index.html",
+  "niche_id": "ci-failure-diagnoser",
+  "notes": "Deterministic state release (offline): summarize verified maintenance changes, sanitized telemetry counts, and known limitations. This release makes no financial promises.\n\nOffline fallback digest: 0dba887a1468. No cloud endpoint was contacted.",
+  "product_name": "sask-ci-diagnoser",
+  "published_url": null,
+  "release_id": "rel-96d8c54d5220",
+  "status": "prepared",
+  "tag": "v0.1.0-ci-failure-diagnoser",
+  "version": "0.1.0"
+}
