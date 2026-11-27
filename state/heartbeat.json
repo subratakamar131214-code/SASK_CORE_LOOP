@@ -1,12 +1,12 @@
 {
-  "alerts_recorded": 0,
-  "alerts_suppressed": 3,
+  "alerts_recorded": 2,
+  "alerts_suppressed": 1,
   "chain_valid": true,
-  "checked_at": "2026-11-26T15:57:13Z",
+  "checked_at": "2026-11-27T01:15:25Z",
   "healthy": false,
   "last": {
-    "cycle": "2026-11-26T07:30:12Z",
-    "heartbeat": "2026-11-26T01:17:19Z",
+    "cycle": "2026-11-26T21:08:29Z",
+    "heartbeat": "2026-11-26T15:57:13Z",
     "swarm": null,
     "upgrade": null
   },
