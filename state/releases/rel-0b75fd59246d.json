@@ -1,0 +1,15 @@
+{
+  "archive": "dist/openapi-schema-migrator/sask-openapi-migrator-0.1.0.zip",
+  "archive_sha256": "750a986fc643b8479b6efdc0a4ec2e3a594ec1fcd4d0b07aefa70823341267ca",
+  "build_digest": "deb0af922cc133aa6d4d437c0801ede312b8861b20f50ae8b2bcf5e519a0d02a",
+  "created_at": "2026-11-28T06:57:44Z",
+  "landing_page": "dist/site/openapi-schema-migrator/index.html",
+  "niche_id": "openapi-schema-migrator",
+  "notes": "Deterministic state release (offline): summarize verified maintenance changes, sanitized telemetry counts, and known limitations. This release makes no financial promises.\n\nOffline fallback digest: de073efa1611. No cloud endpoint was contacted.",
+  "product_name": "sask-openapi-migrator",
+  "published_url": null,
+  "release_id": "rel-0b75fd59246d",
+  "status": "prepared",
+  "tag": "v0.1.0-openapi-schema-migrator",
+  "version": "0.1.0"
+}

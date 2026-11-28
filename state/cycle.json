@@ -100,8 +100,8 @@
     "spent_usd": 0.0,
     "treasury_balance_usd": 0.0
   },
-  "cycle": 51,
-  "duration_seconds": 0.055,
+  "cycle": 59,
+  "duration_seconds": 0.052,
   "feedback": {
     "accepted": 0,
     "dropped": 0,
@@ -134,7 +134,7 @@
   "opportunities": [
     {
       "budget_owner": "Platform or release engineering manager",
-      "created_at": "2026-11-27T20:52:05Z",
+      "created_at": "2026-11-28T06:57:44Z",
       "evidence_ids": [],
       "id": "opp-9f7a24b5c884",
       "kind": "focus_validation",
@@ -147,7 +147,7 @@
     },
     {
       "budget_owner": "API platform or integration engineering lead",
-      "created_at": "2026-11-27T20:52:05Z",
+      "created_at": "2026-11-28T06:57:44Z",
       "evidence_ids": [],
       "id": "opp-6f04f01b6537",
       "kind": "seed_validation",
@@ -162,23 +162,23 @@
   "packages": [
     {
       "archive": "dist/ci-failure-diagnoser/sask-ci-diagnoser-0.1.0.zip",
-      "created_at": "2026-11-27T20:52:05Z",
+      "created_at": "2026-11-28T06:57:44Z",
       "file_count": 13,
       "license": "MIT",
       "niche_id": "ci-failure-diagnoser",
       "product_name": "sask-ci-diagnoser",
-      "sha256": "c0f76153fc04c22f56bfcb9c1a23638c04b981ab5dfcfa4d21d65b5e3abfc5d7",
+      "sha256": "9c940cf379b6e3010fa74da2ee906aefff464063e28c9aaa93cd85531c35921d",
       "size_bytes": 8689,
       "version": "0.1.0"
     },
     {
       "archive": "dist/openapi-schema-migrator/sask-openapi-migrator-0.1.0.zip",
-      "created_at": "2026-11-27T20:52:05Z",
+      "created_at": "2026-11-28T06:57:44Z",
       "file_count": 13,
       "license": "MIT",
       "niche_id": "openapi-schema-migrator",
       "product_name": "sask-openapi-migrator",
-      "sha256": "e4c302a58f8e1a720743f680bbfd7929307f45c78f9530999f7617523126ae0b",
+      "sha256": "750a986fc643b8479b6efdc0a4ec2e3a594ec1fcd4d0b07aefa70823341267ca",
       "size_bytes": 9791,
       "version": "0.1.0"
     }
@@ -186,7 +186,7 @@
   "pages": [
     {
       "channel_count": 4,
-      "created_at": "2026-11-27T20:52:05Z",
+      "created_at": "2026-11-28T06:57:44Z",
       "niche_id": "ci-failure-diagnoser",
       "path": "dist/site/ci-failure-diagnoser/index.html",
       "sha256": "7fe596a2e775441672bd216d67de228831636c29bf9b223ba5f2ac4a29f47eec",
@@ -194,7 +194,7 @@
     },
     {
       "channel_count": 4,
-      "created_at": "2026-11-27T20:52:05Z",
+      "created_at": "2026-11-28T06:57:44Z",
       "niche_id": "openapi-schema-migrator",
       "path": "dist/site/openapi-schema-migrator/index.html",
       "sha256": "78f2b7a0b073f7395f273e2c5e0aaf66c07507c212502b2b0c620a48b93a13a9",
@@ -204,30 +204,30 @@
   "releases": [
     {
       "archive": "dist/ci-failure-diagnoser/sask-ci-diagnoser-0.1.0.zip",
-      "archive_sha256": "c0f76153fc04c22f56bfcb9c1a23638c04b981ab5dfcfa4d21d65b5e3abfc5d7",
+      "archive_sha256": "9c940cf379b6e3010fa74da2ee906aefff464063e28c9aaa93cd85531c35921d",
       "build_digest": "28b4dcacbc07c45c12211374dc82eb057979d0ca5ce7289dcc5f3f375fa7b45d",
-      "created_at": "2026-11-27T20:52:05Z",
+      "created_at": "2026-11-28T06:57:44Z",
       "landing_page": "dist/site/ci-failure-diagnoser/index.html",
       "niche_id": "ci-failure-diagnoser",
       "notes": "Deterministic state release (offline): summarize verified maintenance changes, sanitized telemetry counts, and known limitations. This release makes no financial promises.\n\nOffline fallback digest: 0dba887a1468. No cloud endpoint was contacted.",
       "product_name": "sask-ci-diagnoser",
       "published_url": null,
-      "release_id": "rel-f8b163295be3",
+      "release_id": "rel-efa0a49905a7",
       "status": "prepared",
       "tag": "v0.1.0-ci-failure-diagnoser",
       "version": "0.1.0"
     },
     {
       "archive": "dist/openapi-schema-migrator/sask-openapi-migrator-0.1.0.zip",
-      "archive_sha256": "e4c302a58f8e1a720743f680bbfd7929307f45c78f9530999f7617523126ae0b",
+      "archive_sha256": "750a986fc643b8479b6efdc0a4ec2e3a594ec1fcd4d0b07aefa70823341267ca",
       "build_digest": "deb0af922cc133aa6d4d437c0801ede312b8861b20f50ae8b2bcf5e519a0d02a",
-      "created_at": "2026-11-27T20:52:05Z",
+      "created_at": "2026-11-28T06:57:44Z",
       "landing_page": "dist/site/openapi-schema-migrator/index.html",
       "niche_id": "openapi-schema-migrator",
       "notes": "Deterministic state release (offline): summarize verified maintenance changes, sanitized telemetry counts, and known limitations. This release makes no financial promises.\n\nOffline fallback digest: de073efa1611. No cloud endpoint was contacted.",
       "product_name": "sask-openapi-migrator",
       "published_url": null,
-      "release_id": "rel-d0916b45a292",
+      "release_id": "rel-0b75fd59246d",
       "status": "prepared",
       "tag": "v0.1.0-openapi-schema-migrator",
       "version": "0.1.0"
